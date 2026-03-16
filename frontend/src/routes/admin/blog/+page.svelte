@@ -235,6 +235,7 @@
     </button>
     {#if editPostId}
       <button class="button-outline" on:click={resetPostForm}>Batal Edit</button>
+      <button class="button-alt" on:click={() => removePost(editPostId)}>Hapus Post Ini</button>
     {/if}
   </div>
 </section>

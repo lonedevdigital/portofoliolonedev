@@ -129,6 +129,7 @@
     </button>
     {#if editId}
       <button class="button-outline" on:click={resetForm}>Batal Edit</button>
+      <button class="button-alt" on:click={() => removeClient(editId)}>Hapus Client Ini</button>
     {/if}
   </div>
 </section>

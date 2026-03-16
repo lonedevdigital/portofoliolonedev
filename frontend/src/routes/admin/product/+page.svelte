@@ -161,6 +161,7 @@
     </button>
     {#if editId}
       <button class="button-outline" on:click={resetForm}>Batal Edit</button>
+      <button class="button-alt" on:click={() => removeProduct(editId)}>Hapus Product Ini</button>
     {/if}
   </div>
 </section>
