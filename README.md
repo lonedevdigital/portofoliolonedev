@@ -23,6 +23,7 @@ Aplikasi fullstack untuk portfolio web services dengan fitur:
 
 - Backend: Fastify (SQLite storage)
 - Frontend: SvelteKit
+- Styling: Tailwind CSS
 - Deployment: Docker Compose (friendly untuk Coolify)
 
 ## Struktur
