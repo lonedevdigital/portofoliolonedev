@@ -158,37 +158,53 @@
 
   .button-main,
   .button-alt,
-  .button-outline {
+  .button-outline,
+  .button-danger {
     @apply cursor-pointer rounded-xl border-0 px-4 py-3 text-sm font-bold transition duration-200;
   }
 
   .button-main:hover,
   .button-alt:hover,
-  .button-outline:hover {
+  .button-outline:hover,
+  .button-danger:hover {
     @apply -translate-y-px;
   }
 
   .button-main {
-    @apply text-slate-50 shadow-glow;
+    @apply text-slate-900 shadow-glow;
     background: linear-gradient(
       140deg,
-      color-mix(in srgb, var(--primary-btn) 84%, white),
-      color-mix(in srgb, var(--primary-btn) 75%, black)
+      color-mix(in srgb, var(--primary-btn) 58%, white),
+      color-mix(in srgb, var(--primary-btn) 40%, #dbeafe)
     );
+    border: 1px solid color-mix(in srgb, var(--primary-btn) 64%, #0f172a);
   }
 
   .button-main:hover {
-    box-shadow: 0 16px 30px -18px color-mix(in srgb, var(--primary-btn) 58%, black);
+    box-shadow: 0 16px 30px -18px color-mix(in srgb, var(--primary-btn) 35%, #0f172a);
   }
 
   .button-alt {
-    @apply text-slate-50;
+    @apply text-slate-900;
     background: linear-gradient(
       140deg,
-      color-mix(in srgb, var(--secondary-btn) 82%, white),
-      color-mix(in srgb, var(--secondary-btn) 72%, black)
+      color-mix(in srgb, var(--secondary-btn) 42%, white),
+      color-mix(in srgb, var(--secondary-btn) 24%, #dbeafe)
     );
-    box-shadow: 0 14px 26px -18px color-mix(in srgb, var(--secondary-btn) 48%, black);
+    border: 1px solid color-mix(in srgb, var(--secondary-btn) 52%, #0f172a);
+    box-shadow: 0 14px 26px -18px color-mix(in srgb, var(--secondary-btn) 26%, #0f172a);
+  }
+
+  .button-danger {
+    color: #500724;
+    background: linear-gradient(145deg, #fecdd3, #fda4af);
+    border: 1px solid #fb7185;
+    box-shadow: 0 14px 26px -18px rgba(225, 29, 72, 0.55);
+  }
+
+  .button-danger:hover {
+    border-color: #f43f5e;
+    box-shadow: 0 16px 30px -18px rgba(190, 24, 93, 0.6);
   }
 
   .button-outline {
@@ -296,51 +312,130 @@
   }
 
   .admin-layout {
-    @apply grid min-h-screen grid-cols-[280px_minmax(0,1fr)];
+    @apply grid min-h-screen grid-cols-[300px_minmax(0,1fr)];
     background:
-      radial-gradient(880px 280px at 0% 0%, rgba(14, 165, 233, 0.2), transparent 60%),
-      radial-gradient(780px 260px at 100% 0%, rgba(245, 158, 11, 0.2), transparent 58%),
-      #f1f5f9;
+      radial-gradient(920px 340px at -8% -4%, rgba(14, 165, 233, 0.24), transparent 62%),
+      radial-gradient(820px 320px at 102% -8%, rgba(16, 185, 129, 0.22), transparent 64%),
+      linear-gradient(180deg, #f2f7fc, #e9f0f8 54%, #eef4fb);
   }
 
   .admin-sidebar {
-    @apply sticky top-0 h-screen border-r p-4 text-slate-200;
-    border-color: rgba(148, 163, 184, 0.35);
-    background: linear-gradient(180deg, #0f172a, #132a3a 74%);
+    @apply sticky top-0 flex h-screen flex-col gap-4 border-r p-5 text-slate-200;
+    border-color: rgba(148, 163, 184, 0.3);
+    background:
+      radial-gradient(220px 120px at 10% 0%, rgba(56, 189, 248, 0.22), transparent 74%),
+      radial-gradient(260px 140px at 100% 16%, rgba(52, 211, 153, 0.18), transparent 76%),
+      linear-gradient(180deg, #0b1220, #111f35 62%, #14283f);
+    box-shadow:
+      inset -1px 0 0 rgba(148, 163, 184, 0.22),
+      18px 0 34px -28px rgba(15, 23, 42, 0.9);
+  }
+
+  .admin-sidebar-head {
+    @apply rounded-2xl border p-3;
+    border-color: rgba(148, 163, 184, 0.28);
+    background: linear-gradient(150deg, rgba(30, 41, 59, 0.5), rgba(30, 64, 175, 0.18));
+  }
+
+  .admin-kicker {
+    @apply mb-1 mt-0 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-sky-200;
   }
 
   .admin-sidebar h2 {
-    @apply mb-4 mt-0 text-lg font-bold text-slate-50;
+    @apply mb-1 mt-0 text-xl font-bold text-slate-50;
     font-family: var(--font-display);
   }
 
+  .admin-sidebar p {
+    @apply m-0 text-xs leading-relaxed text-slate-300;
+  }
+
   .admin-nav {
-    @apply grid gap-1.5;
+    @apply grid gap-2;
   }
 
   .admin-nav a {
-    @apply rounded-lg border border-transparent px-3 py-2 text-sm font-semibold text-slate-200;
+    @apply rounded-xl border border-transparent px-3 py-2.5 text-sm font-semibold text-slate-200 transition duration-200;
+    background: linear-gradient(120deg, rgba(51, 65, 85, 0.35), rgba(15, 23, 42, 0.1));
   }
 
   .admin-nav a:hover,
   .admin-nav a.active {
-    border-color: rgba(125, 211, 252, 0.45);
-    background: linear-gradient(120deg, rgba(14, 165, 233, 0.18), rgba(59, 130, 246, 0.08));
+    border-color: rgba(56, 189, 248, 0.58);
+    background: linear-gradient(120deg, rgba(14, 165, 233, 0.33), rgba(37, 99, 235, 0.2));
+    color: #e2f5ff;
+    box-shadow: 0 10px 22px -18px rgba(14, 165, 233, 0.9);
+  }
+
+  .admin-sidebar-foot {
+    @apply mt-auto grid gap-2 rounded-2xl border p-3;
+    border-color: rgba(148, 163, 184, 0.28);
+    background: linear-gradient(150deg, rgba(30, 41, 59, 0.44), rgba(15, 23, 42, 0.2));
+  }
+
+  .admin-link-action {
+    @apply rounded-lg border border-slate-500/50 px-3 py-2 text-center text-sm font-semibold text-slate-100 transition duration-200;
+    background: linear-gradient(150deg, rgba(30, 41, 59, 0.56), rgba(14, 116, 144, 0.26));
+  }
+
+  .admin-link-action:hover {
+    @apply -translate-y-px;
+    border-color: rgba(103, 232, 249, 0.58);
+    background: linear-gradient(150deg, rgba(14, 165, 233, 0.35), rgba(6, 182, 212, 0.18));
+  }
+
+  .admin-logout {
     color: #f8fafc;
+    border: 1px solid rgba(254, 202, 202, 0.42);
+    background: linear-gradient(145deg, rgba(251, 113, 133, 0.58), rgba(190, 24, 93, 0.52));
+  }
+
+  .admin-logout:hover {
+    border-color: rgba(253, 164, 175, 0.75);
+    box-shadow: 0 14px 24px -18px rgba(190, 24, 93, 0.95);
   }
 
   .admin-content {
-    @apply p-5;
+    @apply p-6 md:p-8;
+  }
+
+  .admin-content-inner {
+    @apply mx-auto w-[min(1120px,100%)];
   }
 
   .toolbar {
-    @apply mb-4 flex flex-wrap items-center justify-between gap-3;
+    @apply mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 shadow-soft;
+    border-color: rgba(148, 163, 184, 0.34);
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.94), rgba(236, 246, 255, 0.82));
+  }
+
+  .toolbar h1 {
+    @apply m-0 text-[1.45rem] font-bold text-slate-900;
+    font-family: var(--font-display);
+  }
+
+  .toolbar .toolbar-sub {
+    @apply mb-0 mt-1 text-sm text-slate-600;
+  }
+
+  .toolbar .toolbar-kicker {
+    @apply m-0 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-sky-700;
   }
 
   .panel {
-    @apply rounded-[18px] border p-4 shadow-soft;
-    background: color-mix(in srgb, #ffffff 86%, #f8fafc);
-    border-color: #dbe4ef;
+    @apply rounded-[22px] border p-5 shadow-soft;
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(240, 248, 255, 0.88));
+    border-color: rgba(148, 163, 184, 0.34);
+  }
+
+  .panel h2 {
+    @apply mt-0 text-xl font-bold text-slate-900;
+    font-family: var(--font-display);
+  }
+
+  .panel h3 {
+    @apply mb-2 mt-0 text-lg font-semibold text-slate-900;
+    font-family: var(--font-display);
   }
 
   .panel + .panel {
@@ -358,16 +453,17 @@
   input,
   textarea,
   select {
-    @apply rounded-xl border bg-white px-3 py-2 transition duration-150;
-    border-color: #cbd5e1;
+    @apply rounded-xl border px-3 py-2 text-slate-900 transition duration-150;
+    border-color: #bfccdc;
+    background: linear-gradient(175deg, #ffffff, #f8fbff);
   }
 
   input:focus,
   textarea:focus,
   select:focus {
     @apply outline-none;
-    border-color: #0ea5e9;
-    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+    border-color: #0284c7;
+    box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.14);
   }
 
   textarea {
@@ -379,40 +475,77 @@
   }
 
   table {
-    @apply w-full border-collapse;
+    @apply w-full border-collapse overflow-hidden rounded-xl;
   }
 
   th,
   td {
-    @apply border-b px-2.5 py-2 text-left align-top text-[0.92rem];
-    border-color: #e2e8f0;
+    @apply border-b px-3 py-2.5 text-left align-top text-[0.9rem] text-slate-800;
+    border-color: #d8e4f1;
+  }
+
+  th {
+    @apply text-xs font-bold uppercase tracking-[0.05em] text-slate-600;
+    background: linear-gradient(180deg, rgba(241, 245, 249, 0.95), rgba(232, 240, 250, 0.88));
   }
 
   tbody tr:hover {
-    @apply bg-sky-500/5;
+    background: linear-gradient(120deg, rgba(14, 165, 233, 0.07), rgba(16, 185, 129, 0.06));
   }
 
   .stats-grid {
-    @apply grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3;
+    @apply grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-3;
   }
 
   .stat-card {
-    @apply rounded-[13px] border p-4 shadow-soft;
-    border-color: #dbe4ef;
-    background: linear-gradient(165deg, #ffffff, #f8fafc);
+    @apply rounded-2xl border p-4 shadow-soft;
+    border-color: rgba(148, 163, 184, 0.35);
+    background:
+      radial-gradient(160px 80px at 100% 0%, rgba(56, 189, 248, 0.16), transparent 80%),
+      linear-gradient(168deg, #ffffff, #edf5ff);
   }
 
   .stat-card p {
-    @apply m-0 text-xs text-slate-600;
+    @apply m-0 text-[0.72rem] font-bold uppercase tracking-[0.08em] text-slate-600;
   }
 
   .stat-card h3 {
-    @apply mb-0 mt-1 text-2xl font-bold;
+    @apply mb-1 mt-1 text-[1.9rem] font-bold text-slate-900;
+    font-family: var(--font-display);
+  }
+
+  .stat-note {
+    @apply text-xs text-slate-500;
+  }
+
+  .dashboard-grid {
+    @apply mt-4 grid gap-4;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  }
+
+  .insight-list {
+    @apply grid gap-2;
+  }
+
+  .insight-item {
+    @apply flex items-center justify-between rounded-xl border px-3 py-2;
+    border-color: rgba(148, 163, 184, 0.34);
+    background: linear-gradient(170deg, #f8fbff, #edf5ff);
+  }
+
+  .insight-item span {
+    @apply text-sm text-slate-700;
+  }
+
+  .insight-item strong {
+    @apply text-base text-slate-900;
     font-family: var(--font-display);
   }
 
   .chart {
-    @apply mt-4 grid min-h-[170px] grid-cols-7 items-end gap-2;
+    @apply mt-4 grid min-h-[190px] grid-cols-7 items-end gap-2 rounded-xl border p-3;
+    border-color: rgba(148, 163, 184, 0.32);
+    background: linear-gradient(170deg, rgba(255, 255, 255, 0.82), rgba(239, 246, 255, 0.88));
   }
 
   .chart-bar {
@@ -421,9 +554,9 @@
 
   .chart-bar .bar {
     @apply min-h-2 w-full rounded-t-[9px] border;
-    background: linear-gradient(180deg, #0ea5e9, #0284c7);
+    background: linear-gradient(180deg, #22d3ee, #0284c7 72%);
     border-color: #0369a1;
-    box-shadow: 0 8px 14px -10px rgba(3, 105, 161, 0.75);
+    box-shadow: 0 10px 18px -10px rgba(2, 132, 199, 0.72);
   }
 
   .chart-bar small {
@@ -485,6 +618,13 @@
     color: #92400e;
   }
 
+  .notice-success {
+    @apply rounded-xl border p-3;
+    border-color: #34d399;
+    background: linear-gradient(160deg, #ecfdf5, #d1fae5);
+    color: #065f46;
+  }
+
   .empty {
     @apply text-sm text-slate-500;
   }
@@ -498,6 +638,10 @@
   .admin-sidebar {
     @apply static h-auto border-b border-r-0;
     border-color: rgba(148, 163, 184, 0.35);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

@@ -152,8 +152,9 @@
 
 <div class="toolbar">
   <div>
-    <h1 style="margin:0;">Blog</h1>
-    <p style="margin:0.2rem 0 0; color:#64748b;">Tambah kategori, tulis post, publish/unpublish artikel.</p>
+    <p class="toolbar-kicker">Content Manager</p>
+    <h1>Blog</h1>
+    <p class="toolbar-sub">Tambah kategori, tulis post, publish/unpublish artikel.</p>
   </div>
   <button class="button-outline" on:click={loadData}>Reload</button>
 </div>
@@ -187,7 +188,7 @@
               <td>{category.name}</td>
               <td>{category.slug}</td>
               <td>
-                <button class="button-alt" on:click={() => removeCategory(category.id)}>Hapus</button>
+                <button class="button-danger" on:click={() => removeCategory(category.id)}>Hapus</button>
               </td>
             </tr>
           {/each}
@@ -241,7 +242,7 @@
     </button>
     {#if editPostId}
       <button class="button-outline" on:click={resetPostForm}>Batal Edit</button>
-      <button class="button-alt" on:click={() => removePost(editPostId)}>Hapus Post Ini</button>
+      <button class="button-danger" on:click={() => removePost(editPostId)}>Hapus Post Ini</button>
     {/if}
   </div>
 </section>
@@ -274,7 +275,7 @@
               <td>
                 <div class="button-row">
                   <button class="button-outline" on:click={() => editPost(post)}>Edit</button>
-                  <button class="button-alt" on:click={() => removePost(post.id)}>Hapus</button>
+                  <button class="button-danger" on:click={() => removePost(post.id)}>Hapus</button>
                 </div>
               </td>
             </tr>

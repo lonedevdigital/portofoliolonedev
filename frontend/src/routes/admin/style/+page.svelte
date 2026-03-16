@@ -28,6 +28,7 @@
   let saving = false;
   let error = '';
   let contrastInfo = '';
+  let saveInfo = '';
 
   let palettes = [];
   let selectedPalette = 'ocean-flat';
@@ -36,6 +37,7 @@
   async function loadStyleData() {
     loading = true;
     error = '';
+    saveInfo = '';
 
     try {
       const [paletteData, styleData] = await Promise.all([
@@ -87,6 +89,7 @@
   async function saveStyle() {
     saving = true;
     error = '';
+    saveInfo = '';
 
     try {
       await putJson('/api/site/style', {
@@ -94,6 +97,7 @@
         colors
       });
       await loadStyleData();
+      saveInfo = 'Style berhasil disimpan dan diterapkan ke website.';
     } catch (err) {
       error = err.message;
     } finally {
@@ -106,10 +110,9 @@
 
 <div class="toolbar">
   <div>
-    <h1 style="margin:0;">Style</h1>
-    <p style="margin:0.2rem 0 0; color:#64748b;">
-      Pilih palette flat design, custom warna section, dan preview hasil halaman.
-    </p>
+    <p class="toolbar-kicker">Visual Theme</p>
+    <h1>Style</h1>
+    <p class="toolbar-sub">Pilih palette flat design, custom warna section, dan preview hasil halaman.</p>
   </div>
   <button class="button-outline" on:click={loadStyleData}>Reload</button>
 </div>
@@ -120,6 +123,10 @@
 
 {#if contrastInfo}
   <div class="notice" style="margin-bottom:1rem;">{contrastInfo}</div>
+{/if}
+
+{#if saveInfo}
+  <div class="notice-success" style="margin-bottom:1rem;">{saveInfo}</div>
 {/if}
 
 <section class="panel">
@@ -164,7 +171,10 @@
 
     <div class="button-row" style="margin-top:0.8rem;">
       <button class="button-main" on:click={saveStyle} disabled={saving}>
-        {saving ? 'Menyimpan...' : 'Simpan Perubahan Style'}
+        {saving ? 'Menyimpan...' : 'Simpan & Terapkan ke Website'}
+      </button>
+      <button class="button-outline" on:click={loadStyleData} disabled={saving}>
+        Kembalikan ke Versi Tersimpan
       </button>
     </div>
   {/if}
@@ -174,4 +184,9 @@
   <h2 style="margin-top:0;">Preview Halaman Web</h2>
   <p style="margin-top:0; color:#64748b;">Simulasi warna untuk hero, product, blog, pricing, clients, dan footer.</p>
   <StylePreview {colors} />
+  <div class="button-row" style="margin-top:1rem;">
+    <button class="button-main" on:click={saveStyle} disabled={saving || loading}>
+      {saving ? 'Menerapkan...' : 'Jadikan Style Ini untuk Website'}
+    </button>
+  </div>
 </section>

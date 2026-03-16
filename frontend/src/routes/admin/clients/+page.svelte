@@ -93,8 +93,9 @@
 
 <div class="toolbar">
   <div>
-    <h1 style="margin:0;">Clients</h1>
-    <p style="margin:0.2rem 0 0; color:#64748b;">Kelola daftar client dan testimonial.</p>
+    <p class="toolbar-kicker">Social Proof Manager</p>
+    <h1>Clients</h1>
+    <p class="toolbar-sub">Kelola daftar client dan testimonial.</p>
   </div>
   <button class="button-outline" on:click={loadClients}>Reload</button>
 </div>
@@ -129,7 +130,7 @@
     </button>
     {#if editId}
       <button class="button-outline" on:click={resetForm}>Batal Edit</button>
-      <button class="button-alt" on:click={() => removeClient(editId)}>Hapus Client Ini</button>
+      <button class="button-danger" on:click={() => removeClient(editId)}>Hapus Client Ini</button>
     {/if}
   </div>
 </section>
@@ -166,7 +167,7 @@
               <td>
                 <div class="button-row">
                   <button class="button-outline" on:click={() => editClient(client)}>Edit</button>
-                  <button class="button-alt" on:click={() => removeClient(client.id)}>Hapus</button>
+                  <button class="button-danger" on:click={() => removeClient(client.id)}>Hapus</button>
                 </div>
               </td>
             </tr>

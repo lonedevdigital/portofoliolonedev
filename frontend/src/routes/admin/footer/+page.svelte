@@ -69,8 +69,9 @@
 
 <div class="toolbar">
   <div>
-    <h1 style="margin:0;">Footer</h1>
-    <p style="margin:0.2rem 0 0; color:#64748b;">Atur info footer dan social links.</p>
+    <p class="toolbar-kicker">Footer Content</p>
+    <h1>Footer</h1>
+    <p class="toolbar-sub">Atur info footer dan social links.</p>
   </div>
   <button class="button-outline" on:click={loadFooter}>Reload</button>
 </div>
@@ -118,7 +119,7 @@
           <input bind:value={social.url} placeholder="https://..." />
         </label>
         <div style="display:flex; align-items:flex-end;">
-          <button class="button-alt" on:click={() => removeSocial(index)}>Hapus</button>
+          <button class="button-danger" on:click={() => removeSocial(index)}>Hapus</button>
         </div>
       </div>
     {/each}

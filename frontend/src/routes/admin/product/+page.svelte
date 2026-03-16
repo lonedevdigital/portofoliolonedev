@@ -113,8 +113,9 @@
 
 <div class="toolbar">
   <div>
-    <h1 style="margin:0;">Product</h1>
-    <p style="margin:0.2rem 0 0; color:#64748b;">Kelola layanan, detail, dan harga.</p>
+    <p class="toolbar-kicker">Catalog Manager</p>
+    <h1>Product</h1>
+    <p class="toolbar-sub">Kelola layanan, detail, dan harga.</p>
   </div>
   <button class="button-outline" on:click={loadProducts}>Reload</button>
 </div>
@@ -161,7 +162,7 @@
     </button>
     {#if editId}
       <button class="button-outline" on:click={resetForm}>Batal Edit</button>
-      <button class="button-alt" on:click={() => removeProduct(editId)}>Hapus Product Ini</button>
+      <button class="button-danger" on:click={() => removeProduct(editId)}>Hapus Product Ini</button>
     {/if}
   </div>
 </section>
@@ -197,7 +198,7 @@
               <td>
                 <div class="button-row">
                   <button class="button-outline" on:click={() => editProduct(product)}>Edit</button>
-                  <button class="button-alt" on:click={() => removeProduct(product.id)}>Hapus</button>
+                  <button class="button-danger" on:click={() => removeProduct(product.id)}>Hapus</button>
                 </div>
               </td>
             </tr>

@@ -50,8 +50,9 @@
 
 <div class="toolbar">
   <div>
-    <h1 style="margin:0;">Navigation</h1>
-    <p style="margin:0.2rem 0 0; color:#64748b;">Atur menu header website.</p>
+    <p class="toolbar-kicker">Header Menu</p>
+    <h1>Navigation</h1>
+    <p class="toolbar-sub">Atur menu header website.</p>
   </div>
   <button class="button-outline" on:click={loadNavigation}>Reload</button>
 </div>
@@ -81,7 +82,7 @@
           <input bind:value={item.href} placeholder="/pricing" />
         </label>
         <div style="display:flex; align-items:flex-end;">
-          <button class="button-alt" on:click={() => removeItem(index)}>Hapus</button>
+          <button class="button-danger" on:click={() => removeItem(index)}>Hapus</button>
         </div>
       </div>
     {/each}

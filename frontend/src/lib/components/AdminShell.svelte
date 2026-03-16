@@ -26,7 +26,11 @@
 
 <div class="admin-layout">
   <aside class="admin-sidebar">
-    <h2>Admin Dashboard</h2>
+    <div class="admin-sidebar-head">
+      <p class="admin-kicker">LoneDev Control Center</p>
+      <h2>Admin Workspace</h2>
+      <p>Kelola konten, katalog layanan, style website, dan konfigurasi tampilan.</p>
+    </div>
     <nav class="admin-nav">
       {#each adminLinks as link}
         <a
@@ -39,14 +43,18 @@
           {link.label}
         </a>
       {/each}
-      <a href="/" style="margin-top:0.6rem;">Lihat Website</a>
-      <button class="button-alt" style="margin-top:0.6rem; width:100%;" on:click={logout}>
+    </nav>
+    <div class="admin-sidebar-foot">
+      <a class="admin-link-action" href="/">Lihat Website</a>
+      <button class="admin-logout" style="width:100%;" on:click={logout}>
         {loggingOut ? 'Signing out...' : 'Logout'}
       </button>
-    </nav>
+    </div>
   </aside>
 
   <section class="admin-content">
-    <slot />
+    <div class="admin-content-inner">
+      <slot />
+    </div>
   </section>
 </div>
