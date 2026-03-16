@@ -157,7 +157,7 @@
   </div>
   <div class="button-row" style="margin-top:0.8rem;">
     <button class="button-main" on:click={submitProduct} disabled={saving}>
-      {saving ? 'Menyimpan...' : editId ? 'Update Product' : 'Tambah Product'}
+      {saving ? 'Menyimpan...' : 'Simpan Product'}
     </button>
     {#if editId}
       <button class="button-outline" on:click={resetForm}>Batal Edit</button>

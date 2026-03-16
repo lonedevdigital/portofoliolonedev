@@ -4,6 +4,7 @@
 
   let loading = true;
   let savingPost = false;
+  let savingCategory = false;
   let error = '';
 
   let categories = [];
@@ -53,6 +54,7 @@
   }
 
   async function addCategory() {
+    savingCategory = true;
     try {
       if (!categoryName.trim()) {
         throw new Error('Nama category wajib diisi');
@@ -63,6 +65,8 @@
       await loadData();
     } catch (err) {
       error = err.message;
+    } finally {
+      savingCategory = false;
     }
   }
 
@@ -162,7 +166,9 @@
   <h2 style="margin-top:0;">Category</h2>
   <div class="button-row">
     <input style="max-width:320px;" bind:value={categoryName} placeholder="Nama category" />
-    <button class="button-main" on:click={addCategory}>Tambah Category</button>
+    <button class="button-main" on:click={addCategory} disabled={savingCategory}>
+      {savingCategory ? 'Menyimpan...' : 'Simpan Category'}
+    </button>
   </div>
 
   <div class="table-wrap" style="margin-top:0.8rem;">
@@ -231,7 +237,7 @@
 
   <div class="button-row" style="margin-top:0.8rem;">
     <button class="button-main" on:click={submitPost} disabled={savingPost}>
-      {savingPost ? 'Menyimpan...' : editPostId ? 'Update Post' : 'Tambah Post'}
+      {savingPost ? 'Menyimpan...' : 'Simpan Post'}
     </button>
     {#if editPostId}
       <button class="button-outline" on:click={resetPostForm}>Batal Edit</button>

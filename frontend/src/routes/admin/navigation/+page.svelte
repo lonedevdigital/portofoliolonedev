@@ -89,7 +89,7 @@
     <div class="button-row" style="margin-top:0.8rem;">
       <button class="button-outline" on:click={addItem}>Tambah Item</button>
       <button class="button-main" on:click={saveNavigation} disabled={saving}>
-        {saving ? 'Menyimpan...' : 'Simpan Navigation'}
+        {saving ? 'Menyimpan...' : 'Simpan Perubahan Navigasi'}
       </button>
     </div>
   {/if}

@@ -148,7 +148,7 @@
 
     <div class="button-row" style="margin-top:0.8rem;">
       <button class="button-main" on:click={saveStyle} disabled={saving}>
-        {saving ? 'Menyimpan...' : 'Simpan Style'}
+        {saving ? 'Menyimpan...' : 'Simpan Perubahan Style'}
       </button>
     </div>
   {/if}

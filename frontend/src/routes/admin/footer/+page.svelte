@@ -126,7 +126,7 @@
     <div class="button-row" style="margin-top:0.8rem;">
       <button class="button-outline" on:click={addSocial}>Tambah Social</button>
       <button class="button-main" on:click={saveFooter} disabled={saving}>
-        {saving ? 'Menyimpan...' : 'Simpan Footer'}
+        {saving ? 'Menyimpan...' : 'Simpan Perubahan Footer'}
       </button>
     </div>
   {/if}
