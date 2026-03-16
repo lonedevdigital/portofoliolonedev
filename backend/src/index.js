@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import cookie from '@fastify/cookie';
+import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { resolve } from 'node:path';
 import {
   JsonStore,
@@ -14,6 +16,9 @@ const PORT = Number(process.env.PORT || 3001);
 const HOST = process.env.HOST || '0.0.0.0';
 const DATA_FILE = process.env.DATA_FILE || resolve(process.cwd(), 'data/db.json');
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'lonedev_admin_session';
+const SESSION_TTL_DAYS = Number(process.env.SESSION_TTL_DAYS || 7);
+const COOKIE_SECURE = String(process.env.COOKIE_SECURE || 'false').toLowerCase() === 'true';
 
 const app = Fastify({ logger: true });
 const store = new JsonStore(DATA_FILE);
@@ -24,6 +29,7 @@ const corsOrigin =
     : CORS_ORIGIN.split(',').map((item) => item.trim());
 
 await app.register(cors, { origin: corsOrigin });
+await app.register(cookie);
 
 function issueId(db, scope) {
   const current = Number(db.meta.nextIds?.[scope] ?? 1);
@@ -94,6 +100,134 @@ function sanitizeStyleColors(colors = {}) {
   return next;
 }
 
+function getSessionMaxAgeSeconds() {
+  return Math.max(1, Math.floor(SESSION_TTL_DAYS * 24 * 60 * 60));
+}
+
+function getSessionExpiryIso() {
+  return new Date(Date.now() + getSessionMaxAgeSeconds() * 1000).toISOString();
+}
+
+function createPasswordHash(password, providedSalt = null) {
+  const salt = providedSalt || randomBytes(16).toString('hex');
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  return { salt, hash };
+}
+
+function verifyPassword(password, hash, salt) {
+  if (!password || !hash || !salt) {
+    return false;
+  }
+
+  const hashedInput = scryptSync(password, salt, 64).toString('hex');
+  const left = Buffer.from(hashedInput, 'hex');
+  const right = Buffer.from(hash, 'hex');
+
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return timingSafeEqual(left, right);
+}
+
+function createSessionToken() {
+  return randomBytes(32).toString('hex');
+}
+
+function sanitizeAdmin(admin) {
+  if (!admin) {
+    return null;
+  }
+
+  return {
+    id: admin.id,
+    name: admin.name,
+    email: admin.email,
+    createdAt: admin.createdAt
+  };
+}
+
+function withActiveSessions(db) {
+  const now = Date.now();
+  const sessions = Array.isArray(db.auth?.sessions) ? db.auth.sessions : [];
+  const activeSessions = sessions.filter((session) => {
+    return new Date(session.expiresAt).getTime() > now;
+  });
+
+  const hasExpiredSessions = activeSessions.length !== sessions.length;
+  return { activeSessions, hasExpiredSessions };
+}
+
+function readAuthState() {
+  const db = store.read();
+  const { activeSessions, hasExpiredSessions } = withActiveSessions(db);
+
+  if (hasExpiredSessions) {
+    db.auth.sessions = activeSessions;
+    store.write(db);
+  }
+
+  return {
+    admin: db.auth?.admin || null,
+    sessions: hasExpiredSessions ? activeSessions : db.auth.sessions || []
+  };
+}
+
+function getAdminBySessionToken(token) {
+  if (!token) {
+    return null;
+  }
+
+  const authState = readAuthState();
+  const matched = authState.sessions.find((session) => session.token === token);
+
+  if (!matched || !authState.admin) {
+    return null;
+  }
+
+  if (Number(authState.admin.id) !== Number(matched.adminId)) {
+    return null;
+  }
+
+  return sanitizeAdmin(authState.admin);
+}
+
+const adminProtectedPrefixes = [
+  '/api/admin',
+  '/api/products',
+  '/api/blog/categories',
+  '/api/blog/posts',
+  '/api/clients',
+  '/api/site/navigation',
+  '/api/site/footer',
+  '/api/site/style'
+];
+
+function requiresAdminAuth(routePath = '') {
+  return adminProtectedPrefixes.some((prefix) => {
+    return routePath === prefix || routePath.startsWith(`${prefix}/`);
+  });
+}
+
+function setSessionCookie(reply, token) {
+  reply.setCookie(SESSION_COOKIE_NAME, token, {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: COOKIE_SECURE,
+    maxAge: getSessionMaxAgeSeconds()
+  });
+}
+
+function clearSessionCookie(reply) {
+  reply.clearCookie(SESSION_COOKIE_NAME, {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: COOKIE_SECURE
+  });
+}
+
 function getDashboardStats(db) {
   const todayKey = new Date().toISOString().slice(0, 10);
   const visitsByDay = [];
@@ -118,7 +252,163 @@ function getDashboardStats(db) {
   };
 }
 
+app.addHook('preHandler', async (request, reply) => {
+  const routePath = request.routeOptions?.url || '';
+
+  if (!requiresAdminAuth(routePath)) {
+    return;
+  }
+
+  const token = request.cookies?.[SESSION_COOKIE_NAME];
+  const admin = getAdminBySessionToken(token);
+
+  if (!admin) {
+    return reply.code(401).send({ message: 'Unauthorized' });
+  }
+});
+
 app.get('/health', async () => ({ status: 'ok', timestamp: getNowIso() }));
+
+app.get('/api/auth/setup-status', async () => {
+  const authState = readAuthState();
+  return {
+    needsSetup: !authState.admin,
+    hasAdmin: Boolean(authState.admin)
+  };
+});
+
+app.post('/api/auth/setup', async (request, reply) => {
+  const body = request.body || {};
+  const name = String(body.name || '').trim();
+  const email = String(body.email || '').trim().toLowerCase();
+  const password = String(body.password || '');
+
+  if (!name || !email || password.length < 6) {
+    return reply.code(400).send({
+      message: 'Name, email, and password (min 6 chars) are required'
+    });
+  }
+
+  let createdAdmin = null;
+  let sessionToken = null;
+  let alreadyInitialized = false;
+
+  store.mutate((db) => {
+    const currentAdmin = db.auth?.admin || null;
+    if (currentAdmin) {
+      alreadyInitialized = true;
+      return db;
+    }
+
+    const now = getNowIso();
+    const passwordHash = createPasswordHash(password);
+    const admin = {
+      id: 1,
+      name,
+      email,
+      passwordHash: passwordHash.hash,
+      passwordSalt: passwordHash.salt,
+      createdAt: now
+    };
+
+    sessionToken = createSessionToken();
+    db.auth.admin = admin;
+    db.auth.sessions = [
+      {
+        token: sessionToken,
+        adminId: admin.id,
+        createdAt: now,
+        expiresAt: getSessionExpiryIso()
+      }
+    ];
+    createdAdmin = sanitizeAdmin(admin);
+    return db;
+  });
+
+  if (alreadyInitialized) {
+    return reply.code(409).send({
+      message: 'Administrator already created. Please login.'
+    });
+  }
+
+  setSessionCookie(reply, sessionToken);
+  return reply.code(201).send({ admin: createdAdmin });
+});
+
+app.post('/api/auth/login', async (request, reply) => {
+  const body = request.body || {};
+  const email = String(body.email || '').trim().toLowerCase();
+  const password = String(body.password || '');
+  const authState = readAuthState();
+  const admin = authState.admin;
+
+  if (!admin) {
+    return reply.code(400).send({
+      message: 'Administrator is not setup yet. Create account first.'
+    });
+  }
+
+  if (!email || !password) {
+    return reply.code(400).send({ message: 'Email and password are required' });
+  }
+
+  const isValidEmail = email === String(admin.email || '').toLowerCase();
+  const isValidPassword = verifyPassword(
+    password,
+    admin.passwordHash,
+    admin.passwordSalt
+  );
+
+  if (!isValidEmail || !isValidPassword) {
+    return reply.code(401).send({ message: 'Invalid email or password' });
+  }
+
+  const token = createSessionToken();
+  const now = getNowIso();
+
+  store.mutate((db) => {
+    const { activeSessions } = withActiveSessions(db);
+    db.auth.sessions = [
+      ...activeSessions.slice(-19),
+      {
+        token,
+        adminId: admin.id,
+        createdAt: now,
+        expiresAt: getSessionExpiryIso()
+      }
+    ];
+    return db;
+  });
+
+  setSessionCookie(reply, token);
+  return { admin: sanitizeAdmin(admin) };
+});
+
+app.post('/api/auth/logout', async (request, reply) => {
+  const token = request.cookies?.[SESSION_COOKIE_NAME];
+
+  if (token) {
+    store.mutate((db) => {
+      db.auth.sessions = (db.auth.sessions || []).filter(
+        (session) => session.token !== token
+      );
+      return db;
+    });
+  }
+
+  clearSessionCookie(reply);
+  return { success: true };
+});
+
+app.get('/api/auth/me', async (request) => {
+  const token = request.cookies?.[SESSION_COOKIE_NAME];
+  const admin = getAdminBySessionToken(token);
+
+  return {
+    authenticated: Boolean(admin),
+    admin
+  };
+});
 
 app.get('/api/site/palettes', async () => ({ palettes: paletteLibrary }));
 

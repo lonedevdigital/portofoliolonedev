@@ -1,4 +1,4 @@
-﻿# LoneDev Portfolio Web Services
+# LoneDev Portfolio Web Services
 
 Aplikasi fullstack untuk portfolio web services dengan fitur:
 
@@ -14,6 +14,10 @@ Aplikasi fullstack untuk portfolio web services dengan fitur:
   - Footer
   - Navigation
   - Style (palette + custom section color + preview)
+- Authentication administrator:
+  - `/login` untuk setup akun admin pertama (sekali saja)
+  - Setelah akun pertama dibuat, fitur create account dinonaktifkan
+  - Login/logout session berbasis HTTP-only cookie
 
 ## Stack
 
@@ -72,6 +76,11 @@ Catatan untuk Coolify:
 ## Endpoint Utama Backend
 
 - `GET /health`
+- `GET /api/auth/setup-status`
+- `POST /api/auth/setup`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
 - `GET /api/admin/dashboard`
 - `GET/POST/PUT/DELETE /api/products`
 - `GET/POST/PUT/DELETE /api/blog/categories`

@@ -9,6 +9,7 @@ export async function apiFetch(path, options = {}) {
   const normalizedPath = String(path || '').startsWith('/') ? path : `/${path}`;
 
   const response = await fetch(`${base}${normalizedPath}`, {
+    credentials: 'include',
     ...options,
     headers: {
       'Content-Type': 'application/json',

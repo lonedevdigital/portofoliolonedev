@@ -237,6 +237,10 @@ function createSeedData() {
     blogCategories: categories,
     blogPosts: posts,
     clients,
+    auth: {
+      admin: null,
+      sessions: []
+    },
     site: {
       navigation: {
         items: [
@@ -282,6 +286,15 @@ function normalizeDbShape(db) {
     blogCategories: Array.isArray(db.blogCategories) ? db.blogCategories : seed.blogCategories,
     blogPosts: Array.isArray(db.blogPosts) ? db.blogPosts : seed.blogPosts,
     clients: Array.isArray(db.clients) ? db.clients : seed.clients,
+    auth: {
+      admin:
+        db.auth?.admin &&
+        typeof db.auth.admin === 'object' &&
+        typeof db.auth.admin.email === 'string'
+          ? db.auth.admin
+          : null,
+      sessions: Array.isArray(db.auth?.sessions) ? db.auth.sessions : []
+    },
     site: {
       navigation: db.site?.navigation ?? seed.site.navigation,
       footer: db.site?.footer ?? seed.site.footer,
