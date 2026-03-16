@@ -1,7 +1,7 @@
 ﻿<script>
   import { onMount } from 'svelte';
   import { getJson, putJson } from '$lib/api';
-  import { defaultStyleColors } from '$lib/defaultStyle';
+  import { defaultStyleColors, enforceReadableStyleColors } from '$lib/defaultStyle';
   import StylePreview from '$lib/components/StylePreview.svelte';
 
   const colorFields = [
@@ -27,6 +27,7 @@
   let loading = true;
   let saving = false;
   let error = '';
+  let contrastInfo = '';
 
   let palettes = [];
   let selectedPalette = 'ocean-flat';
@@ -44,10 +45,11 @@
 
       palettes = paletteData.palettes || [];
       selectedPalette = styleData.style?.palette || palettes[0]?.key || 'ocean-flat';
-      colors = {
+      colors = enforceReadableStyleColors({
         ...defaultStyleColors,
         ...(styleData.style?.colors || {})
-      };
+      });
+      contrastInfo = '';
     } catch (err) {
       error = err.message;
     } finally {
@@ -62,17 +64,24 @@
     }
 
     selectedPalette = selected.key;
-    colors = {
+    colors = enforceReadableStyleColors({
       ...defaultStyleColors,
       ...(selected.colors || {})
-    };
+    });
+    contrastInfo = '';
   }
 
   function updateColor(key, value) {
-    colors = {
+    const requested = {
       ...colors,
       [key]: value
     };
+    const next = enforceReadableStyleColors(requested);
+    colors = next;
+    contrastInfo =
+      JSON.stringify(requested) !== JSON.stringify(next)
+        ? 'Warna teks otomatis disesuaikan agar tetap terbaca pada background terang.'
+        : '';
   }
 
   async function saveStyle() {
@@ -109,6 +118,10 @@
   <div class="notice" style="margin-bottom:1rem;">{error}</div>
 {/if}
 
+{#if contrastInfo}
+  <div class="notice" style="margin-bottom:1rem;">{contrastInfo}</div>
+{/if}
+
 <section class="panel">
   <h2 style="margin-top:0;">Palette Flat Design</h2>
 
@@ -133,6 +146,9 @@
     </div>
 
     <h3 style="margin-top:1rem;">Custom Section Colors</h3>
+    <p style="margin-top:0; color:#64748b;">
+      Rule otomatis: jika background mendekati putih, teks pada section tersebut tidak boleh putih.
+    </p>
     <div class="form-grid">
       {#each colorFields as field}
         <label>

@@ -4,6 +4,7 @@ import cookie from '@fastify/cookie';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { resolve } from 'node:path';
 import {
+  enforceReadableStyleColors,
   JsonStore,
   getDefaultStyleColors,
   getNowIso,
@@ -107,7 +108,7 @@ function sanitizeStyleColors(colors = {}) {
     }
   });
 
-  return next;
+  return enforceReadableStyleColors(next);
 }
 
 function getSessionMaxAgeSeconds() {

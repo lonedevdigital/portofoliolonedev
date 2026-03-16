@@ -1,9 +1,9 @@
-﻿<script>
-  import { defaultStyleColors } from '$lib/defaultStyle';
+<script>
+  import { defaultStyleColors, enforceReadableStyleColors } from '$lib/defaultStyle';
 
   export let colors = {};
 
-  $: merged = { ...defaultStyleColors, ...(colors || {}) };
+  $: merged = enforceReadableStyleColors({ ...defaultStyleColors, ...(colors || {}) });
   $: previewStyle = [
     `--preview-page-bg: ${merged.pageBg}`,
     `--preview-hero-bg: ${merged.heroBg}`,

@@ -22,6 +22,64 @@ const defaultStyleColors = {
   cardBorder: '#dbe4ef'
 };
 
+const styleContrastPairs = [
+  ['heroBg', 'heroText'],
+  ['productBg', 'productText'],
+  ['blogBg', 'blogText'],
+  ['pricingBg', 'pricingText'],
+  ['clientsBg', 'clientsText'],
+  ['footerBg', 'footerText']
+];
+
+function parseHexColor(colorValue) {
+  if (typeof colorValue !== 'string') {
+    return null;
+  }
+
+  const value = colorValue.trim().toLowerCase();
+  const shortMatch = /^#([0-9a-f]{3})$/i.exec(value);
+  if (shortMatch) {
+    const [r, g, b] = shortMatch[1].split('');
+    return {
+      r: Number.parseInt(`${r}${r}`, 16),
+      g: Number.parseInt(`${g}${g}`, 16),
+      b: Number.parseInt(`${b}${b}`, 16)
+    };
+  }
+
+  const fullMatch = /^#([0-9a-f]{6})$/i.exec(value);
+  if (!fullMatch) {
+    return null;
+  }
+
+  return {
+    r: Number.parseInt(fullMatch[1].slice(0, 2), 16),
+    g: Number.parseInt(fullMatch[1].slice(2, 4), 16),
+    b: Number.parseInt(fullMatch[1].slice(4, 6), 16)
+  };
+}
+
+function isNearWhite(colorValue) {
+  const rgb = parseHexColor(colorValue);
+  if (!rgb) {
+    return false;
+  }
+
+  return rgb.r >= 244 && rgb.g >= 244 && rgb.b >= 244;
+}
+
+export function enforceReadableStyleColors(colors = {}) {
+  const next = { ...defaultStyleColors, ...(colors || {}) };
+
+  for (const [bgKey, textKey] of styleContrastPairs) {
+    if (isNearWhite(next[bgKey]) && isNearWhite(next[textKey])) {
+      next[textKey] = '#0f172a';
+    }
+  }
+
+  return next;
+}
+
 export const paletteLibrary = [
   {
     key: 'ocean-flat',
@@ -113,6 +171,29 @@ export const paletteLibrary = [
       secondaryButton: '#f97316',
       cardBg: '#ffffff',
       cardBorder: '#cbd5e1'
+    }
+  },
+  {
+    key: 'aurora-flat',
+    name: 'Aurora Flat',
+    colors: {
+      pageBg: '#f8fafc',
+      heroBg: '#22d3ee',
+      heroText: '#083344',
+      productBg: '#ffffff',
+      productText: '#1e293b',
+      blogBg: '#ecfeff',
+      blogText: '#155e75',
+      pricingBg: '#34d399',
+      pricingText: '#052e16',
+      clientsBg: '#ffffff',
+      clientsText: '#0f172a',
+      footerBg: '#0b132b',
+      footerText: '#e2e8f0',
+      primaryButton: '#06b6d4',
+      secondaryButton: '#10b981',
+      cardBg: '#ffffff',
+      cardBorder: '#bae6fd'
     }
   }
 ];
@@ -264,7 +345,7 @@ function createSeedData() {
       },
       style: {
         palette: 'ocean-flat',
-        colors: defaultStyleColors
+        colors: { ...defaultStyleColors }
       }
     },
     visits: [],
@@ -301,10 +382,10 @@ function normalizeDbShape(db) {
       footer: db.site?.footer ?? seed.site.footer,
       style: {
         palette: db.site?.style?.palette ?? seed.site.style.palette,
-        colors: {
+        colors: enforceReadableStyleColors({
           ...defaultStyleColors,
           ...(db.site?.style?.colors ?? seed.site.style.colors)
-        }
+        })
       }
     },
     visits: Array.isArray(db.visits) ? db.visits : seed.visits,
