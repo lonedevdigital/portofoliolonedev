@@ -68,7 +68,7 @@ BACKEND_INTERNAL_URL=http://localhost:3001
 Tips CORS production:
 
 - Simpan `PUBLIC_API_BASE_URL` kosong agar browser tetap call same-origin `/api/*`.
-- Jika Anda pakai direct API domain (misalnya `https://api.domain.com`), backend harus set:
+- Jika Anda pakai direct API domain (misalnya `https://api.domain.com`), isi hanya origin/domain (tanpa suffix `/api` dan tanpa trailing slash), lalu backend harus set:
   - `CORS_ORIGIN=https://frontend-domain.com`
   - `CORS_CREDENTIALS=true`
 

@@ -4,8 +4,40 @@ function isAbsoluteHttpUrl(value) {
   return value.startsWith('http://') || value.startsWith('https://');
 }
 
+function stripTrailingSlashes(value) {
+  return String(value || '').replace(/\/+$/, '');
+}
+
+function normalizeConfiguredBaseUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) {
+    return '';
+  }
+
+  if (!isAbsoluteHttpUrl(raw)) {
+    const normalizedRelative = stripTrailingSlashes(raw);
+    return normalizedRelative === '/api' ? '' : normalizedRelative;
+  }
+
+  try {
+    const target = new URL(raw);
+    target.pathname = stripTrailingSlashes(target.pathname || '/');
+    target.search = '';
+    target.hash = '';
+
+    // Our callsites already include `/api/...`, so drop a configured `/api` prefix.
+    if (target.pathname === '/api') {
+      target.pathname = '';
+    }
+
+    return stripTrailingSlashes(target.toString());
+  } catch {
+    return '';
+  }
+}
+
 export function getApiBaseUrl() {
-  const configured = (env.PUBLIC_API_BASE_URL || '').trim();
+  const configured = normalizeConfiguredBaseUrl(env.PUBLIC_API_BASE_URL);
   if (!configured) {
     return '';
   }

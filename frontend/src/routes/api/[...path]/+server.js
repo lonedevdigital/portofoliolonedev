@@ -14,16 +14,39 @@ const hopByHopHeaders = new Set([
 ]);
 
 function stripTrailingSlash(value) {
-  return value.replace(/\/$/, '');
+  return String(value || '').replace(/\/+$/, '');
+}
+
+function normalizeBackendBaseUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) {
+    return '';
+  }
+
+  try {
+    const target = new URL(raw);
+    target.pathname = stripTrailingSlash(target.pathname || '/');
+    target.search = '';
+    target.hash = '';
+
+    // Proxy always appends `/api/...`, so avoid accidental `/api/api/...`.
+    if (target.pathname === '/api') {
+      target.pathname = '';
+    }
+
+    return stripTrailingSlash(target.toString());
+  } catch {
+    return stripTrailingSlash(raw);
+  }
 }
 
 function getBackendBaseUrl() {
   if (privateEnv.BACKEND_INTERNAL_URL?.trim()) {
-    return stripTrailingSlash(privateEnv.BACKEND_INTERNAL_URL.trim());
+    return normalizeBackendBaseUrl(privateEnv.BACKEND_INTERNAL_URL);
   }
 
   if (publicEnv.PUBLIC_API_BASE_URL?.trim()) {
-    return stripTrailingSlash(publicEnv.PUBLIC_API_BASE_URL.trim());
+    return normalizeBackendBaseUrl(publicEnv.PUBLIC_API_BASE_URL);
   }
 
   return 'http://localhost:3001';
@@ -35,7 +58,9 @@ async function proxyRequest(request, params) {
     ? params.path.join('/')
     : String(params.path || '');
   const inboundUrl = new URL(request.url);
-  const targetUrl = new URL(`${backendBaseUrl}/api/${dynamicPath}`);
+  const sanitizedPath = dynamicPath.replace(/^\/+/, '');
+  const targetPath = sanitizedPath ? `/api/${sanitizedPath}` : '/api';
+  const targetUrl = new URL(targetPath, `${backendBaseUrl}/`);
   targetUrl.search = inboundUrl.search;
 
   const headers = new Headers();
