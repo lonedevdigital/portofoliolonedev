@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import Database from 'better-sqlite3';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 const defaultStyleColors = {
@@ -319,49 +320,116 @@ function normalizeDbShape(db) {
   };
 }
 
-export class JsonStore {
-  constructor(filePath) {
-    this.filePath = resolve(filePath);
-    this._ensureFile();
+function readLegacyJson(path) {
+  if (!existsSync(path)) {
+    return null;
   }
 
-  _ensureFile() {
-    const parent = dirname(this.filePath);
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return null;
+  }
+}
 
+export class JsonStore {
+  constructor(filePath, options = {}) {
+    this.filePath = resolve(filePath);
+    this.legacyJsonPath = options.legacyJsonPath
+      ? resolve(options.legacyJsonPath)
+      : resolve(dirname(this.filePath), 'db.json');
+
+    this._ensureDirectory();
+    this.db = new Database(this.filePath);
+    this.db.pragma('journal_mode = WAL');
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS app_state (
+        id INTEGER PRIMARY KEY CHECK(id = 1),
+        payload TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+
+    this.insertStateStmt = this.db.prepare(`
+      INSERT INTO app_state (id, payload, updated_at)
+      VALUES (1, @payload, @updatedAt)
+      ON CONFLICT(id) DO UPDATE SET
+        payload = excluded.payload,
+        updated_at = excluded.updated_at;
+    `);
+
+    this.selectStateStmt = this.db.prepare('SELECT payload FROM app_state WHERE id = 1');
+
+    this._ensureState();
+  }
+
+  _ensureDirectory() {
+    const parent = dirname(this.filePath);
     if (!existsSync(parent)) {
       mkdirSync(parent, { recursive: true });
     }
+  }
 
-    if (!existsSync(this.filePath)) {
-      const seed = createSeedData();
-      writeFileSync(this.filePath, JSON.stringify(seed, null, 2), 'utf8');
+  _fallbackState() {
+    const legacy = readLegacyJson(this.legacyJsonPath);
+    if (legacy) {
+      return normalizeDbShape(legacy);
+    }
+
+    return createSeedData();
+  }
+
+  _ensureState() {
+    const row = this.selectStateStmt.get();
+
+    if (!row) {
+      this.write(this._fallbackState());
       return;
     }
 
     try {
-      const parsed = JSON.parse(readFileSync(this.filePath, 'utf8'));
-      const normalized = normalizeDbShape(parsed);
-      writeFileSync(this.filePath, JSON.stringify(normalized, null, 2), 'utf8');
+      const parsed = JSON.parse(row.payload);
+      this.write(normalizeDbShape(parsed));
     } catch {
-      const seed = createSeedData();
-      writeFileSync(this.filePath, JSON.stringify(seed, null, 2), 'utf8');
+      this.write(this._fallbackState());
     }
   }
 
   read() {
-    const raw = readFileSync(this.filePath, 'utf8');
-    return normalizeDbShape(JSON.parse(raw));
+    const row = this.selectStateStmt.get();
+
+    if (!row) {
+      const seeded = this._fallbackState();
+      this.write(seeded);
+      return normalizeDbShape(seeded);
+    }
+
+    try {
+      return normalizeDbShape(JSON.parse(row.payload));
+    } catch {
+      const seeded = this._fallbackState();
+      this.write(seeded);
+      return normalizeDbShape(seeded);
+    }
   }
 
   write(data) {
-    writeFileSync(this.filePath, JSON.stringify(normalizeDbShape(data), null, 2), 'utf8');
+    const normalized = normalizeDbShape(data);
+    this.insertStateStmt.run({
+      payload: JSON.stringify(normalized),
+      updatedAt: nowIso()
+    });
+    return normalized;
   }
 
   mutate(mutator) {
-    const current = this.read();
-    const next = mutator(structuredClone(current)) ?? current;
-    this.write(next);
-    return next;
+    const tx = this.db.transaction((mutationFn) => {
+      const current = this.read();
+      const next = mutationFn(structuredClone(current)) ?? current;
+      return this.write(next);
+    });
+
+    return tx(mutator);
   }
 
   createId(scope) {
@@ -377,6 +445,8 @@ export class JsonStore {
     return createdId;
   }
 }
+
+export const SqliteStore = JsonStore;
 
 export function getDefaultStyleColors() {
   return { ...defaultStyleColors };

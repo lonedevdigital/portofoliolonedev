@@ -7,7 +7,8 @@
   let loading = true;
   let submitting = false;
   let error = '';
-  let needsSetup = false;
+  let needsSetup = true;
+  let forceSetup = false;
 
   let setupForm = {
     name: '',
@@ -23,6 +24,7 @@
 
   $: requestedNext = $page.url.searchParams.get('next') || '/admin';
   $: nextPath = requestedNext.startsWith('/') ? requestedNext : '/admin';
+  $: showSetupForm = needsSetup || forceSetup;
 
   async function initializeAuthPage() {
     loading = true;
@@ -40,8 +42,11 @@
       }
 
       needsSetup = Boolean(status?.needsSetup);
+      forceSetup = false;
     } catch (err) {
       error = err.message;
+      // Fallback aman: tetap tampilkan form create admin saat status setup gagal dideteksi.
+      needsSetup = true;
     } finally {
       loading = false;
     }
@@ -74,6 +79,7 @@
         password: setupForm.password
       });
 
+      forceSetup = false;
       goto(nextPath);
     } catch (err) {
       error = err.message;
@@ -117,7 +123,7 @@
     <div class="panel" style="max-width:560px; margin:0 auto;">
       <h1 style="margin-top:0;">Administrator Access</h1>
       <p style="color:#64748b; margin-top:0;">
-        {#if needsSetup}
+        {#if showSetupForm}
           Buat akun administrator pertama. Setelah tersimpan, fitur create account akan dinonaktifkan.
         {:else}
           Login menggunakan akun administrator yang sudah terdaftar.
@@ -131,7 +137,7 @@
           <div class="notice" style="margin-bottom:1rem;">{error}</div>
         {/if}
 
-        {#if needsSetup}
+        {#if showSetupForm}
           <div class="form-grid">
             <label>
               Nama Admin
@@ -172,6 +178,16 @@
           <div class="button-row" style="margin-top: 1rem;">
             <button class="button-main" on:click={submitLogin} disabled={submitting}>
               {submitting ? 'Logging in...' : 'Login'}
+            </button>
+            <button
+              class="button-outline"
+              type="button"
+              on:click={() => {
+                forceSetup = true;
+                error = '';
+              }}
+            >
+              Belum Ada Admin? Create
             </button>
             <a class="button-outline" href="/">Kembali ke Website</a>
           </div>

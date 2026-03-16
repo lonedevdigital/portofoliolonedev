@@ -21,7 +21,7 @@ Aplikasi fullstack untuk portfolio web services dengan fitur:
 
 ## Stack
 
-- Backend: Fastify (JSON file database)
+- Backend: Fastify (SQLite storage)
 - Frontend: SvelteKit
 - Deployment: Docker Compose (friendly untuk Coolify)
 
@@ -42,6 +42,7 @@ npm run dev
 ```
 
 Backend default: `http://localhost:3001`
+Default SQLite file: `backend/data/app.db`
 
 ### 2) Frontend
 
@@ -81,6 +82,7 @@ Catatan untuk Coolify:
 - Frontend memanggil backend via proxy internal `http://backend:3001`.
 - Backend CORS credentials sudah aktif (`CORS_CREDENTIALS=true`) untuk kebutuhan login cookie lintas origin.
 - Coolify bisa mengelola routing/public port tanpa bentrok dengan project lain.
+- Backend otomatis migrasi data legacy `db.json` ke SQLite `app.db` saat pertama start jika file lama tersedia.
 
 ## Endpoint Utama Backend
 

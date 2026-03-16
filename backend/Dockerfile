@@ -10,7 +10,8 @@ COPY data ./data
 
 ENV HOST=0.0.0.0
 ENV PORT=3001
-ENV DATA_FILE=/data/db.json
+ENV DATA_FILE=/data/app.db
+ENV LEGACY_DATA_FILE=/data/db.json
 
 VOLUME ["/data"]
 EXPOSE 3001

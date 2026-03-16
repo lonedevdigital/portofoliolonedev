@@ -6,7 +6,8 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: "3001"
-      DATA_FILE: /data/db.json
+      DATA_FILE: /data/app.db
+      LEGACY_DATA_FILE: /data/db.json
       CORS_ORIGIN: "*"
       CORS_CREDENTIALS: "true"
       SESSION_TTL_DAYS: "7"

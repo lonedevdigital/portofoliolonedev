@@ -14,7 +14,11 @@ import {
 
 const PORT = Number(process.env.PORT || 3001);
 const HOST = process.env.HOST || '0.0.0.0';
-const DATA_FILE = process.env.DATA_FILE || resolve(process.cwd(), 'data/db.json');
+const DATA_FILE =
+  process.env.DATA_FILE ||
+  process.env.DATABASE_FILE ||
+  resolve(process.cwd(), 'data/app.db');
+const LEGACY_DATA_FILE = process.env.LEGACY_DATA_FILE;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 const CORS_CREDENTIALS =
   String(process.env.CORS_CREDENTIALS ?? 'true').toLowerCase() === 'true';
@@ -23,7 +27,7 @@ const SESSION_TTL_DAYS = Number(process.env.SESSION_TTL_DAYS || 7);
 const COOKIE_SECURE = String(process.env.COOKIE_SECURE || 'false').toLowerCase() === 'true';
 
 const app = Fastify({ logger: true });
-const store = new JsonStore(DATA_FILE);
+const store = new JsonStore(DATA_FILE, { legacyJsonPath: LEGACY_DATA_FILE });
 
 const corsOrigin =
   CORS_ORIGIN === '*'
