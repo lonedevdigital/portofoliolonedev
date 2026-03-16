@@ -1,0 +1,88 @@
+﻿# LoneDev Portfolio Web Services
+
+Aplikasi fullstack untuk portfolio web services dengan fitur:
+
+- Halaman public modern flat design
+- Product catalog + pricing
+- Blog + category
+- Client testimonials
+- Admin dashboard:
+  - Dashboard statistik pengunjung
+  - Product
+  - Blog
+  - Clients
+  - Footer
+  - Navigation
+  - Style (palette + custom section color + preview)
+
+## Stack
+
+- Backend: Fastify (JSON file database)
+- Frontend: SvelteKit
+- Deployment: Docker Compose (friendly untuk Coolify)
+
+## Struktur
+
+- `backend/` API service
+- `frontend/` SvelteKit app
+- `docker-compose.yml` deployment 2 service
+
+## Menjalankan Lokal (tanpa Docker)
+
+### 1) Backend
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Backend default: `http://localhost:3001`
+
+### 2) Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend default: `http://localhost:4173`
+
+Frontend sudah memakai proxy `/api/*` internal ke backend.
+Jika backend lokal Anda bukan `localhost:3001`, set env berikut saat menjalankan frontend:
+
+```bash
+BACKEND_INTERNAL_URL=http://localhost:3001
+```
+
+## Menjalankan dengan Docker Compose
+
+```bash
+docker compose up -d --build
+```
+
+Catatan untuk Coolify:
+
+- Compose ini **tidak hardcode host ports** (menggunakan `expose`).
+- Port internal service bisa diatur lewat env `BACKEND_PORT` dan `FRONTEND_PORT`.
+- Frontend memanggil backend via proxy internal (`BACKEND_INTERNAL_URL`) sehingga aman dipakai dalam jaringan antar service Coolify.
+- Coolify bisa mengelola routing/public port tanpa bentrok dengan project lain.
+
+## Endpoint Utama Backend
+
+- `GET /health`
+- `GET /api/admin/dashboard`
+- `GET/POST/PUT/DELETE /api/products`
+- `GET/POST/PUT/DELETE /api/blog/categories`
+- `GET/POST/PUT/DELETE /api/blog/posts`
+- `GET/POST/PUT/DELETE /api/clients`
+- `GET/PUT /api/site/navigation`
+- `GET/PUT /api/site/footer`
+- `GET/PUT /api/site/style`
+- `GET /api/site/palettes`
+- `GET /api/public/home`
+- `GET /api/public/products`
+- `GET /api/public/blog`
+- `GET /api/public/blog/:slug`
+- `POST /api/visits`

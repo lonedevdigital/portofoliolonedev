@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      HOST: 0.0.0.0
+      PORT: ${BACKEND_PORT:-3001}
+      DATA_FILE: /data/db.json
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    volumes:
+      - backend_data:/data
+    expose:
+      - "${BACKEND_PORT:-3001}"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      HOST: 0.0.0.0
+      PORT: ${FRONTEND_PORT:-4173}
+      BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:${BACKEND_PORT:-3001}}
+      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-}
+    depends_on:
+      - backend
+    expose:
+      - "${FRONTEND_PORT:-4173}"
+    restart: unless-stopped
+
+volumes:
+  backend_data:
