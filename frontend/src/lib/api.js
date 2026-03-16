@@ -83,3 +83,27 @@ export function putJson(path, payload) {
 export function deleteJson(path) {
   return apiFetch(path, { method: 'DELETE' });
 }
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
+    reader.readAsDataURL(file);
+  });
+}
+
+export async function uploadImageFile(file) {
+  if (!(typeof File !== 'undefined' && file instanceof File)) {
+    throw new Error('File gambar tidak valid');
+  }
+
+  const dataUrl = await readFileAsDataUrl(file);
+  const payload = {
+    fileName: file.name || 'image',
+    mimeType: file.type || '',
+    base64Data: dataUrl
+  };
+
+  return postJson('/api/admin/uploads/image', payload);
+}

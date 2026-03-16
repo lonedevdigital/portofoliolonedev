@@ -6,6 +6,7 @@ Aplikasi fullstack untuk portfolio web services dengan fitur:
 - Product catalog + pricing
 - Product dengan gambar + rich text detail
 - Blog + category + cover image + rich text content
+- Upload gambar langsung dari admin (upload file atau paste `Ctrl+V`)
 - Client testimonials
 - Admin dashboard:
   - Dashboard statistik pengunjung
@@ -86,6 +87,7 @@ Catatan untuk Coolify:
 - Backend CORS credentials sudah aktif (`CORS_CREDENTIALS=true`) untuk kebutuhan login cookie lintas origin.
 - Coolify bisa mengelola routing/public port tanpa bentrok dengan project lain.
 - Backend otomatis migrasi data legacy `db.json` ke SQLite `app.db` saat pertama start jika file lama tersedia.
+- File upload gambar disimpan di `backend/data/uploads` (bisa diatur via `UPLOADS_DIR`).
 
 ## Endpoint Utama Backend
 
@@ -104,6 +106,8 @@ Catatan untuk Coolify:
 - `GET/PUT /api/site/footer`
 - `GET/PUT /api/site/hero`
 - `GET/PUT /api/site/style`
+- `POST /api/admin/uploads/image` (upload image admin)
+- `GET /api/uploads/:fileName` (serve uploaded image)
 - `GET /api/site/palettes`
 - `GET /api/public/home`
 - `GET /api/public/products`

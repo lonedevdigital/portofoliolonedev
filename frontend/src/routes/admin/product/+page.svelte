@@ -1,13 +1,15 @@
 <script>
   import { onMount } from 'svelte';
-  import { deleteJson, getJson, postJson, putJson } from '$lib/api';
+  import { deleteJson, getJson, postJson, putJson, uploadImageFile } from '$lib/api';
   import RichTextEditor from '$lib/components/RichTextEditor.svelte';
 
   let loading = true;
   let saving = false;
+  let uploadingImage = false;
   let error = '';
   let products = [];
   let editId = null;
+  let productImageInput;
 
   let form = {
     name: '',
@@ -113,6 +115,55 @@
     }
   }
 
+  async function uploadProductImage(file) {
+    if (!file) {
+      return;
+    }
+
+    uploadingImage = true;
+    error = '';
+
+    try {
+      const uploaded = await uploadImageFile(file);
+      const imageUrl = String(uploaded?.url || '').trim();
+      if (!imageUrl) {
+        throw new Error('Upload gambar gagal');
+      }
+
+      form = {
+        ...form,
+        imageUrl
+      };
+    } catch (err) {
+      error = err.message;
+    } finally {
+      uploadingImage = false;
+      if (productImageInput) {
+        productImageInput.value = '';
+      }
+    }
+  }
+
+  function triggerProductImagePicker() {
+    productImageInput?.click();
+  }
+
+  async function handleProductImagePick(event) {
+    const file = event.currentTarget.files?.[0] || null;
+    await uploadProductImage(file);
+  }
+
+  async function handleProductImagePaste(event) {
+    const items = Array.from(event.clipboardData?.items || []);
+    const imageItem = items.find((item) => String(item.type || '').startsWith('image/'));
+    if (!imageItem) {
+      return;
+    }
+
+    event.preventDefault();
+    await uploadProductImage(imageItem.getAsFile());
+  }
+
   onMount(loadProducts);
 </script>
 
@@ -140,9 +191,21 @@
       Category
       <input bind:value={form.category} placeholder="Website / Automation" />
     </label>
-    <label>
-      Image URL
+    <label style="grid-column: 1 / -1;" on:paste={handleProductImagePaste}>
+      Image URL (bisa Ctrl+V gambar langsung)
       <input bind:value={form.imageUrl} placeholder="https://..." />
+      <input
+        bind:this={productImageInput}
+        class="editor-upload-input"
+        type="file"
+        accept="image/*"
+        on:change={handleProductImagePick}
+      />
+      <div class="button-row" style="margin-top:0.45rem;">
+        <button class="button-outline" type="button" on:click={triggerProductImagePicker} disabled={uploadingImage}>
+          {uploadingImage ? 'Uploading...' : 'Upload Gambar Product'}
+        </button>
+      </div>
     </label>
     <label>
       Harga
@@ -165,6 +228,13 @@
       <input type="checkbox" bind:checked={form.isFeatured} />
     </label>
   </div>
+
+  {#if form.imageUrl}
+    <div style="margin-top:0.8rem;">
+      <img class="cover-image" src={form.imageUrl} alt="Preview Product" loading="lazy" />
+    </div>
+  {/if}
+
   <div class="button-row" style="margin-top:0.8rem;">
     <button class="button-main" on:click={submitProduct} disabled={saving}>
       {saving ? 'Menyimpan...' : 'Simpan Product'}

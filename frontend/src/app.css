@@ -569,6 +569,10 @@
     background: linear-gradient(180deg, #dbeafe, #bfdbfe);
   }
 
+  .editor-upload-input {
+    display: none;
+  }
+
   .editor-canvas,
   .editor-source {
     @apply rounded-xl border bg-white p-3 text-sm text-slate-900;
@@ -593,6 +597,10 @@
 
   .editor-help {
     @apply m-0 text-xs text-slate-500;
+  }
+
+  .editor-status {
+    @apply m-0 text-xs font-semibold text-emerald-700;
   }
 
   table {

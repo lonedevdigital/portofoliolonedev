@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { uploadImageFile } from '$lib/api';
 
   export let value = '';
   export let placeholder = 'Tulis konten...';
@@ -7,6 +8,9 @@
 
   let sourceMode = false;
   let editorElement;
+  let uploadInput;
+  let uploading = false;
+  let uploadInfo = '';
 
   function syncFromEditor() {
     value = editorElement?.innerHTML || '';
@@ -39,13 +43,94 @@
     exec('createLink', url.trim());
   }
 
-  function insertImage() {
+  function insertImageByUrl() {
     const url = window.prompt('Masukkan URL gambar', 'https://');
     if (!url || !url.trim()) {
       return;
     }
 
     exec('insertImage', url.trim());
+  }
+
+  async function uploadAndInsertImage(file) {
+    if (!file || !String(file.type || '').toLowerCase().startsWith('image/')) {
+      return;
+    }
+
+    uploading = true;
+    uploadInfo = '';
+
+    try {
+      const uploaded = await uploadImageFile(file);
+      const imageUrl = String(uploaded?.url || '').trim();
+      if (!imageUrl) {
+        throw new Error('Upload gambar gagal');
+      }
+
+      if (sourceMode) {
+        const alt = String(file.name || 'image').replace(/"/g, '&quot;');
+        value = `${value || ''}<p><img src="${imageUrl}" alt="${alt}" /></p>`;
+      } else {
+        ensureFocus();
+        document.execCommand('insertImage', false, imageUrl);
+        syncFromEditor();
+      }
+
+      uploadInfo = 'Gambar berhasil diupload.';
+    } catch (error) {
+      uploadInfo = error?.message || 'Gagal upload gambar';
+    } finally {
+      uploading = false;
+      if (uploadInput) {
+        uploadInput.value = '';
+      }
+    }
+  }
+
+  function openImagePicker() {
+    uploadInput?.click();
+  }
+
+  async function handleImagePick(event) {
+    const file = event.currentTarget.files?.[0] || null;
+    if (!file) {
+      return;
+    }
+
+    await uploadAndInsertImage(file);
+  }
+
+  async function handlePaste(event) {
+    const items = Array.from(event.clipboardData?.items || []);
+    const imageItem = items.find((item) => String(item.type || '').startsWith('image/'));
+    if (!imageItem) {
+      return;
+    }
+
+    event.preventDefault();
+    const file = imageItem.getAsFile();
+    if (!file) {
+      return;
+    }
+
+    await uploadAndInsertImage(file);
+  }
+
+  async function handleDrop(event) {
+    event.preventDefault();
+    const file = Array.from(event.dataTransfer?.files || []).find((item) =>
+      String(item.type || '').startsWith('image/')
+    );
+
+    if (!file) {
+      return;
+    }
+
+    await uploadAndInsertImage(file);
+  }
+
+  function handleDragOver(event) {
+    event.preventDefault();
   }
 
   function toggleSourceMode() {
@@ -90,11 +175,22 @@
     <button type="button" on:click={() => formatBlock('blockquote')}>Quote</button>
     <button type="button" on:click={() => formatBlock('pre')}>Code</button>
     <button type="button" on:click={insertLink}>Link</button>
-    <button type="button" on:click={insertImage}>Image</button>
+    <button type="button" on:click={insertImageByUrl}>URL Img</button>
+    <button type="button" on:click={openImagePicker} disabled={uploading}>
+      {uploading ? 'Uploading...' : 'Upload Img'}
+    </button>
     <button type="button" on:click={() => exec('insertHorizontalRule')}>HR</button>
     <button type="button" on:click={() => exec('removeFormat')}>Clear</button>
     <button type="button" class:active={sourceMode} on:click={toggleSourceMode}>HTML</button>
   </div>
+
+  <input
+    bind:this={uploadInput}
+    class="editor-upload-input"
+    type="file"
+    accept="image/*"
+    on:change={handleImagePick}
+  />
 
   {#if sourceMode}
     <textarea
@@ -109,12 +205,22 @@
       class="editor-canvas"
       style={`min-height:${minHeight}px;`}
       contenteditable="true"
+      role="textbox"
+      aria-multiline="true"
+      tabindex="0"
       data-placeholder={placeholder}
       on:input={syncFromEditor}
+      on:paste={handlePaste}
+      on:drop={handleDrop}
+      on:dragover={handleDragOver}
     ></div>
   {/if}
 
   <p class="editor-help">
-    Gunakan toolbar seperti editor WordPress (format heading, list, link, dan image) lalu simpan.
+    Ctrl+V untuk paste gambar langsung, atau klik Upload Img.
   </p>
+
+  {#if uploadInfo}
+    <p class="editor-status">{uploadInfo}</p>
+  {/if}
 </div>

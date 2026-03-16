@@ -2,7 +2,9 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { resolve } from 'node:path';
+import { existsSync, mkdirSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
+import { dirname, extname, resolve } from 'node:path';
 import {
   enforceReadableStyleColors,
   JsonStore,
@@ -28,9 +30,16 @@ const CORS_CREDENTIALS =
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'lonedev_admin_session';
 const SESSION_TTL_DAYS = Number(process.env.SESSION_TTL_DAYS || 7);
 const COOKIE_SECURE = String(process.env.COOKIE_SECURE || 'false').toLowerCase() === 'true';
+const UPLOADS_DIR = process.env.UPLOADS_DIR || resolve(dirname(DATA_FILE), 'uploads');
+const MAX_UPLOAD_SIZE_BYTES = Number(process.env.MAX_UPLOAD_SIZE_BYTES || 8 * 1024 * 1024);
+const BODY_LIMIT_BYTES = Number(process.env.BODY_LIMIT_BYTES || 16 * 1024 * 1024);
 
-const app = Fastify({ logger: true });
+const app = Fastify({ logger: true, bodyLimit: BODY_LIMIT_BYTES });
 const store = new JsonStore(DATA_FILE, { legacyJsonPath: LEGACY_DATA_FILE });
+
+if (!existsSync(UPLOADS_DIR)) {
+  mkdirSync(UPLOADS_DIR, { recursive: true });
+}
 
 const corsOrigin =
   CORS_ORIGIN === '*'
@@ -207,6 +216,7 @@ function getAdminBySessionToken(token) {
 
 const adminProtectedPrefixes = [
   '/api/admin',
+  '/api/admin/uploads',
   '/api/products',
   '/api/blog/categories',
   '/api/blog/posts',
@@ -216,6 +226,69 @@ const adminProtectedPrefixes = [
   '/api/site/footer',
   '/api/site/style'
 ];
+
+const imageMimeByExtension = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml'
+};
+
+const imageExtensionByMime = {
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+  'image/svg+xml': '.svg'
+};
+
+function sanitizeBaseName(name = 'image') {
+  return String(name || 'image')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40) || 'image';
+}
+
+function extractBase64Parts(input) {
+  const raw = String(input || '').trim();
+  if (!raw) {
+    return { mimeType: '', base64Data: '' };
+  }
+
+  const match = /^data:([a-z0-9/+.-]+);base64,(.+)$/i.exec(raw);
+  if (!match) {
+    return { mimeType: '', base64Data: raw };
+  }
+
+  return {
+    mimeType: String(match[1] || '').trim().toLowerCase(),
+    base64Data: String(match[2] || '').trim()
+  };
+}
+
+function resolveImageExtension({ mimeType = '', fileName = '' }) {
+  const normalizedMime = String(mimeType || '').trim().toLowerCase();
+  if (normalizedMime && imageExtensionByMime[normalizedMime]) {
+    return imageExtensionByMime[normalizedMime];
+  }
+
+  const ext = extname(String(fileName || '').trim().toLowerCase());
+  if (ext && imageMimeByExtension[ext]) {
+    return ext;
+  }
+
+  return '';
+}
+
+function getMimeFromStoredName(fileName = '') {
+  const ext = extname(String(fileName || '').toLowerCase());
+  return imageMimeByExtension[ext] || 'application/octet-stream';
+}
 
 function requiresAdminAuth(routePath = '') {
   return adminProtectedPrefixes.some((prefix) => {
@@ -425,6 +498,79 @@ app.get('/api/auth/me', async (request) => {
 });
 
 app.get('/api/site/palettes', async () => ({ palettes: paletteLibrary }));
+
+app.post('/api/admin/uploads/image', async (request, reply) => {
+  const body = request.body || {};
+  const providedName = String(body.fileName || 'image').trim();
+  const providedMimeType = String(body.mimeType || '').trim().toLowerCase();
+  const { mimeType: dataUrlMimeType, base64Data } = extractBase64Parts(body.base64Data);
+  const effectiveMimeType = providedMimeType || dataUrlMimeType;
+  const extension = resolveImageExtension({
+    mimeType: effectiveMimeType,
+    fileName: providedName
+  });
+
+  if (!extension) {
+    return reply.code(400).send({
+      message: 'Unsupported image format. Allowed: PNG, JPG, WEBP, GIF, SVG'
+    });
+  }
+
+  if (!base64Data) {
+    return reply.code(400).send({ message: 'Image data is required' });
+  }
+
+  let buffer = null;
+  try {
+    buffer = Buffer.from(base64Data, 'base64');
+  } catch {
+    return reply.code(400).send({ message: 'Invalid image payload' });
+  }
+
+  if (!buffer || !buffer.length) {
+    return reply.code(400).send({ message: 'Image payload is empty' });
+  }
+
+  if (buffer.length > MAX_UPLOAD_SIZE_BYTES) {
+    return reply.code(413).send({
+      message: `Image exceeds limit (${Math.floor(MAX_UPLOAD_SIZE_BYTES / (1024 * 1024))} MB)`
+    });
+  }
+
+  const cleanBaseName = sanitizeBaseName(providedName.replace(/\.[a-z0-9]+$/i, ''));
+  const uniqueToken = randomBytes(6).toString('hex');
+  const storedFileName = `${Date.now()}-${uniqueToken}-${cleanBaseName}${extension}`;
+  const fullPath = resolve(UPLOADS_DIR, storedFileName);
+
+  await writeFile(fullPath, buffer);
+
+  return reply.code(201).send({
+    fileName: storedFileName,
+    url: `/api/uploads/${storedFileName}`,
+    mimeType: getMimeFromStoredName(storedFileName),
+    size: buffer.length
+  });
+});
+
+app.get('/api/uploads/:fileName', async (request, reply) => {
+  const fileName = String(request.params.fileName || '').trim();
+  if (!/^[a-z0-9._-]+$/i.test(fileName)) {
+    return reply.code(400).send({ message: 'Invalid file name' });
+  }
+
+  const fullPath = resolve(UPLOADS_DIR, fileName);
+
+  let fileBuffer = null;
+  try {
+    fileBuffer = await readFile(fullPath);
+  } catch {
+    return reply.code(404).send({ message: 'File not found' });
+  }
+
+  reply.header('Content-Type', getMimeFromStoredName(fileName));
+  reply.header('Cache-Control', 'public, max-age=31536000, immutable');
+  return reply.send(fileBuffer);
+});
 
 app.post('/api/visits', async (request, reply) => {
   const body = request.body || {};

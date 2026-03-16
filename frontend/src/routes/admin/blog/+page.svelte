@@ -1,11 +1,12 @@
 <script>
   import { onMount } from 'svelte';
-  import { deleteJson, getJson, postJson, putJson } from '$lib/api';
+  import { deleteJson, getJson, postJson, putJson, uploadImageFile } from '$lib/api';
   import RichTextEditor from '$lib/components/RichTextEditor.svelte';
 
   let loading = true;
   let savingPost = false;
   let savingCategory = false;
+  let uploadingCover = false;
   let error = '';
 
   let categories = [];
@@ -14,6 +15,7 @@
   let categoryName = '';
 
   let editPostId = null;
+  let coverInput;
   let postForm = {
     title: '',
     excerpt: '',
@@ -153,6 +155,55 @@
     }
   }
 
+  async function uploadCoverImage(file) {
+    if (!file) {
+      return;
+    }
+
+    uploadingCover = true;
+    error = '';
+
+    try {
+      const uploaded = await uploadImageFile(file);
+      const coverUrl = String(uploaded?.url || '').trim();
+      if (!coverUrl) {
+        throw new Error('Upload gambar cover gagal');
+      }
+
+      postForm = {
+        ...postForm,
+        coverUrl
+      };
+    } catch (err) {
+      error = err.message;
+    } finally {
+      uploadingCover = false;
+      if (coverInput) {
+        coverInput.value = '';
+      }
+    }
+  }
+
+  function triggerCoverPicker() {
+    coverInput?.click();
+  }
+
+  async function handleCoverPick(event) {
+    const file = event.currentTarget.files?.[0] || null;
+    await uploadCoverImage(file);
+  }
+
+  async function handleCoverPaste(event) {
+    const items = Array.from(event.clipboardData?.items || []);
+    const imageItem = items.find((item) => String(item.type || '').startsWith('image/'));
+    if (!imageItem) {
+      return;
+    }
+
+    event.preventDefault();
+    await uploadCoverImage(imageItem.getAsFile());
+  }
+
   onMount(loadData);
 </script>
 
@@ -160,7 +211,7 @@
   <div>
     <p class="toolbar-kicker">Content Manager</p>
     <h1>Blog</h1>
-    <p class="toolbar-sub">Tambah kategori, tulis post rich text, upload gambar, publish/unpublish artikel.</p>
+    <p class="toolbar-sub">Tambah kategori, tulis post rich text, paste gambar langsung, publish/unpublish artikel.</p>
   </div>
   <button class="button-outline" on:click={loadData}>Reload</button>
 </div>
@@ -224,9 +275,21 @@
         {/each}
       </select>
     </label>
-    <label>
-      Cover URL
+    <label style="grid-column: 1 / -1;" on:paste={handleCoverPaste}>
+      Cover URL (bisa Ctrl+V gambar langsung)
       <input bind:value={postForm.coverUrl} placeholder="https://..." />
+      <input
+        bind:this={coverInput}
+        class="editor-upload-input"
+        type="file"
+        accept="image/*"
+        on:change={handleCoverPick}
+      />
+      <div class="button-row" style="margin-top:0.45rem;">
+        <button class="button-outline" type="button" on:click={triggerCoverPicker} disabled={uploadingCover}>
+          {uploadingCover ? 'Uploading...' : 'Upload Gambar Cover'}
+        </button>
+      </div>
     </label>
     <label style="align-items:flex-start;">
       <span>Published</span>
