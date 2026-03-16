@@ -5,15 +5,15 @@ services:
       dockerfile: Dockerfile
     environment:
       HOST: 0.0.0.0
-      PORT: ${BACKEND_PORT:-3001}
+      PORT: "3001"
       DATA_FILE: /data/db.json
-      CORS_ORIGIN: ${CORS_ORIGIN:-*}
-      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-7}
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CORS_ORIGIN: "*"
+      SESSION_TTL_DAYS: "7"
+      COOKIE_SECURE: "false"
     volumes:
       - backend_data:/data
     expose:
-      - "${BACKEND_PORT:-3001}"
+      - "3001"
     restart: unless-stopped
 
   frontend:
@@ -22,13 +22,13 @@ services:
       dockerfile: Dockerfile
     environment:
       HOST: 0.0.0.0
-      PORT: ${FRONTEND_PORT:-4173}
-      BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:3001}
-      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-}
+      PORT: "4173"
+      BACKEND_INTERNAL_URL: http://backend:3001
+      PUBLIC_API_BASE_URL: ""
     depends_on:
       - backend
     expose:
-      - "${FRONTEND_PORT:-4173}"
+      - "4173"
     restart: unless-stopped
 
 volumes:

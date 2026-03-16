@@ -69,8 +69,9 @@ docker compose up -d --build
 Catatan untuk Coolify:
 
 - Compose ini **tidak hardcode host ports** (menggunakan `expose`).
-- Port internal service bisa diatur lewat env `BACKEND_PORT` dan `FRONTEND_PORT`.
-- Frontend memanggil backend via proxy internal (`BACKEND_INTERNAL_URL`) sehingga aman dipakai dalam jaringan antar service Coolify.
+- Port internal container dibuat **fixed** (`3001` backend, `4173` frontend) untuk kompatibilitas parser env Coolify.
+- Routing/public port tetap dikelola dinamis oleh Coolify.
+- Frontend memanggil backend via proxy internal `http://backend:3001`.
 - Coolify bisa mengelola routing/public port tanpa bentrok dengan project lain.
 
 ## Endpoint Utama Backend
