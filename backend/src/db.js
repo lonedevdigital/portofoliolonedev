@@ -324,6 +324,18 @@ function createSeedData() {
       sessions: []
     },
     site: {
+      hero: {
+        badgeText: 'Web Services Portfolio',
+        title: 'Bangun Website Jasa yang Modern, Cepat, dan Mudah Dikelola',
+        description:
+          'Tampilkan portfolio project, publish artikel blog, atur pricing produk, dan kelola semuanya lewat admin dashboard yang sederhana.',
+        primaryButtonLabel: 'Lihat Pricing',
+        primaryButtonHref: '/pricing',
+        secondaryButtonLabel: 'Baca Blog',
+        secondaryButtonHref: '/blog',
+        adminButtonLabel: 'Masuk Admin',
+        adminButtonHref: '/admin'
+      },
       navigation: {
         items: [
           { label: 'Home', href: '/' },
@@ -363,6 +375,46 @@ function createSeedData() {
 
 function normalizeDbShape(db) {
   const seed = createSeedData();
+  const rawHero = db.site?.hero ?? {};
+  const seedHero = seed.site.hero;
+
+  const hero = {
+    badgeText:
+      rawHero.badgeText !== undefined
+        ? String(rawHero.badgeText || '').trim()
+        : seedHero.badgeText,
+    title:
+      rawHero.title !== undefined ? String(rawHero.title || '').trim() : seedHero.title,
+    description:
+      rawHero.description !== undefined
+        ? String(rawHero.description || '').trim()
+        : seedHero.description,
+    primaryButtonLabel:
+      rawHero.primaryButtonLabel !== undefined
+        ? String(rawHero.primaryButtonLabel || '').trim()
+        : seedHero.primaryButtonLabel,
+    primaryButtonHref:
+      rawHero.primaryButtonHref !== undefined
+        ? String(rawHero.primaryButtonHref || '').trim()
+        : seedHero.primaryButtonHref,
+    secondaryButtonLabel:
+      rawHero.secondaryButtonLabel !== undefined
+        ? String(rawHero.secondaryButtonLabel || '').trim()
+        : seedHero.secondaryButtonLabel,
+    secondaryButtonHref:
+      rawHero.secondaryButtonHref !== undefined
+        ? String(rawHero.secondaryButtonHref || '').trim()
+        : seedHero.secondaryButtonHref,
+    adminButtonLabel:
+      rawHero.adminButtonLabel !== undefined
+        ? String(rawHero.adminButtonLabel || '').trim()
+        : seedHero.adminButtonLabel,
+    adminButtonHref:
+      rawHero.adminButtonHref !== undefined
+        ? String(rawHero.adminButtonHref || '').trim()
+        : seedHero.adminButtonHref
+  };
+
   return {
     products: Array.isArray(db.products) ? db.products : seed.products,
     blogCategories: Array.isArray(db.blogCategories) ? db.blogCategories : seed.blogCategories,
@@ -378,6 +430,7 @@ function normalizeDbShape(db) {
       sessions: Array.isArray(db.auth?.sessions) ? db.auth.sessions : []
     },
     site: {
+      hero,
       navigation: db.site?.navigation ?? seed.site.navigation,
       footer: db.site?.footer ?? seed.site.footer,
       style: {

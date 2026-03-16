@@ -16,6 +16,18 @@
     copyrightText: ''
   };
   let style = { colors: {} };
+  let hero = {
+    badgeText: 'Web Services Portfolio',
+    title: 'Bangun Website Jasa yang Modern, Cepat, dan Mudah Dikelola',
+    description:
+      'Tampilkan portfolio project, publish artikel blog, atur pricing produk, dan kelola semuanya lewat admin dashboard yang sederhana.',
+    primaryButtonLabel: 'Lihat Pricing',
+    primaryButtonHref: '/pricing',
+    secondaryButtonLabel: 'Baca Blog',
+    secondaryButtonHref: '/blog',
+    adminButtonLabel: 'Masuk Admin',
+    adminButtonHref: '/admin'
+  };
   let products = [];
   let latestPosts = [];
   let clients = [];
@@ -29,6 +41,7 @@
       navigation = data.navigation;
       footer = data.footer;
       style = data.style;
+      hero = data.hero || hero;
       products = data.products || [];
       latestPosts = data.latestPosts || [];
       clients = data.clients || [];
@@ -59,16 +72,19 @@
   <SiteFrame {navigation} {footer} {style}>
     <section class="page-section" style="background: var(--hero-bg); color: var(--hero-text);">
       <div class="container hero-panel" style="background: var(--hero-bg); color: var(--hero-text);">
-        <span class="badge">Web Services Portfolio</span>
-        <h1 class="hero-title">Bangun Website Jasa yang Modern, Cepat, dan Mudah Dikelola</h1>
-        <p class="hero-desc">
-          Tampilkan portfolio project, publish artikel blog, atur pricing produk, dan kelola semuanya
-          lewat admin dashboard yang sederhana.
-        </p>
+        <span class="badge">{hero.badgeText}</span>
+        <h1 class="hero-title">{hero.title}</h1>
+        <p class="hero-desc">{hero.description}</p>
         <div class="button-row">
-          <a class="button-main" href="/pricing">Lihat Pricing</a>
-          <a class="button-alt" href="/blog">Baca Blog</a>
-          <a class="button-outline" href="/admin">Masuk Admin</a>
+          {#if hero.primaryButtonLabel && hero.primaryButtonHref}
+            <a class="button-main" href={hero.primaryButtonHref}>{hero.primaryButtonLabel}</a>
+          {/if}
+          {#if hero.secondaryButtonLabel && hero.secondaryButtonHref}
+            <a class="button-alt" href={hero.secondaryButtonHref}>{hero.secondaryButtonLabel}</a>
+          {/if}
+          {#if hero.adminButtonLabel && hero.adminButtonHref}
+            <a class="button-outline" href={hero.adminButtonHref}>{hero.adminButtonLabel}</a>
+          {/if}
         </div>
       </div>
     </section>

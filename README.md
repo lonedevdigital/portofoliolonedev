@@ -8,6 +8,7 @@ Aplikasi fullstack untuk portfolio web services dengan fitur:
 - Client testimonials
 - Admin dashboard:
   - Dashboard statistik pengunjung
+  - Hero (edit konten section hero homepage)
   - Product
   - Blog
   - Clients
@@ -100,6 +101,7 @@ Catatan untuk Coolify:
 - `GET/POST/PUT/DELETE /api/clients`
 - `GET/PUT /api/site/navigation`
 - `GET/PUT /api/site/footer`
+- `GET/PUT /api/site/hero`
 - `GET/PUT /api/site/style`
 - `GET /api/site/palettes`
 - `GET /api/public/home`

@@ -209,6 +209,7 @@ const adminProtectedPrefixes = [
   '/api/blog/categories',
   '/api/blog/posts',
   '/api/clients',
+  '/api/site/hero',
   '/api/site/navigation',
   '/api/site/footer',
   '/api/site/style'
@@ -456,6 +457,7 @@ app.get('/api/public/home', async () => {
     .map((item) => withCategory(item, db));
 
   return {
+    hero: db.site.hero,
     navigation: db.site.navigation,
     footer: db.site.footer,
     style: db.site.style,
@@ -463,6 +465,62 @@ app.get('/api/public/home', async () => {
     latestPosts,
     clients: db.clients
   };
+});
+
+app.get('/api/site/hero', async () => {
+  const db = store.read();
+  return { hero: db.site.hero };
+});
+
+app.put('/api/site/hero', async (request) => {
+  const body = request.body || {};
+
+  const updated = store.mutate((db) => {
+    const current = db.site?.hero || {};
+
+    db.site.hero = {
+      badgeText:
+        body.badgeText !== undefined
+          ? String(body.badgeText || '').trim()
+          : String(current.badgeText || '').trim(),
+      title:
+        body.title !== undefined
+          ? String(body.title || '').trim()
+          : String(current.title || '').trim(),
+      description:
+        body.description !== undefined
+          ? String(body.description || '').trim()
+          : String(current.description || '').trim(),
+      primaryButtonLabel:
+        body.primaryButtonLabel !== undefined
+          ? String(body.primaryButtonLabel || '').trim()
+          : String(current.primaryButtonLabel || '').trim(),
+      primaryButtonHref:
+        body.primaryButtonHref !== undefined
+          ? String(body.primaryButtonHref || '').trim()
+          : String(current.primaryButtonHref || '').trim(),
+      secondaryButtonLabel:
+        body.secondaryButtonLabel !== undefined
+          ? String(body.secondaryButtonLabel || '').trim()
+          : String(current.secondaryButtonLabel || '').trim(),
+      secondaryButtonHref:
+        body.secondaryButtonHref !== undefined
+          ? String(body.secondaryButtonHref || '').trim()
+          : String(current.secondaryButtonHref || '').trim(),
+      adminButtonLabel:
+        body.adminButtonLabel !== undefined
+          ? String(body.adminButtonLabel || '').trim()
+          : String(current.adminButtonLabel || '').trim(),
+      adminButtonHref:
+        body.adminButtonHref !== undefined
+          ? String(body.adminButtonHref || '').trim()
+          : String(current.adminButtonHref || '').trim()
+    };
+
+    return db;
+  });
+
+  return { hero: updated.site.hero };
 });
 
 app.get('/api/public/products', async () => {
