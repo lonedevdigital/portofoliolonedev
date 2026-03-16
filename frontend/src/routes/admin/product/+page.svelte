@@ -1,6 +1,7 @@
-﻿<script>
+<script>
   import { onMount } from 'svelte';
   import { deleteJson, getJson, postJson, putJson } from '$lib/api';
+  import RichTextEditor from '$lib/components/RichTextEditor.svelte';
 
   let loading = true;
   let saving = false;
@@ -11,6 +12,7 @@
   let form = {
     name: '',
     category: 'Website',
+    imageUrl: '',
     shortDescription: '',
     detail: '',
     price: 0,
@@ -23,6 +25,7 @@
     form = {
       name: '',
       category: 'Website',
+      imageUrl: '',
       shortDescription: '',
       detail: '',
       price: 0,
@@ -50,6 +53,7 @@
     form = {
       name: product.name,
       category: product.category,
+      imageUrl: product.imageUrl || '',
       shortDescription: product.shortDescription,
       detail: product.detail,
       price: product.price,
@@ -70,6 +74,7 @@
       const payload = {
         name: form.name,
         category: form.category,
+        imageUrl: form.imageUrl,
         shortDescription: form.shortDescription,
         detail: form.detail,
         price: Number(form.price) || 0,
@@ -115,7 +120,7 @@
   <div>
     <p class="toolbar-kicker">Catalog Manager</p>
     <h1>Product</h1>
-    <p class="toolbar-sub">Kelola layanan, detail, dan harga.</p>
+    <p class="toolbar-sub">Kelola layanan, detail, harga, gambar, dan konten rich text.</p>
   </div>
   <button class="button-outline" on:click={loadProducts}>Reload</button>
 </div>
@@ -136,6 +141,10 @@
       <input bind:value={form.category} placeholder="Website / Automation" />
     </label>
     <label>
+      Image URL
+      <input bind:value={form.imageUrl} placeholder="https://..." />
+    </label>
+    <label>
       Harga
       <input type="number" min="0" bind:value={form.price} />
     </label>
@@ -148,8 +157,8 @@
       <textarea bind:value={form.shortDescription}></textarea>
     </label>
     <label style="grid-column: 1 / -1;">
-      Detail Product
-      <textarea bind:value={form.detail}></textarea>
+      Detail Product (Rich Text)
+      <RichTextEditor bind:value={form.detail} placeholder="Tulis detail product dengan rich text..." minHeight={220} />
     </label>
     <label style="align-items:flex-start;">
       <span>Featured Product</span>
@@ -179,6 +188,7 @@
         <thead>
           <tr>
             <th>Nama</th>
+            <th>Gambar</th>
             <th>Category</th>
             <th>Harga</th>
             <th>Featured</th>
@@ -191,6 +201,13 @@
               <td>
                 <strong>{product.name}</strong>
                 <div style="font-size:0.82rem; color:#64748b;">{product.shortDescription}</div>
+              </td>
+              <td>
+                {#if product.imageUrl}
+                  <img class="table-thumb" src={product.imageUrl} alt={product.name} loading="lazy" />
+                {:else}
+                  -
+                {/if}
               </td>
               <td>{product.category}</td>
               <td>{product.currency} {Number(product.price).toLocaleString()}</td>

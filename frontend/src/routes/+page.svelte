@@ -32,6 +32,22 @@
   let latestPosts = [];
   let clients = [];
 
+  function stripHtml(input) {
+    return String(input || '')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function summarize(input, max = 140) {
+    const text = stripHtml(input);
+    if (text.length <= max) {
+      return text;
+    }
+
+    return `${text.slice(0, max)}...`;
+  }
+
   async function loadHome() {
     loading = true;
     error = '';
@@ -96,11 +112,14 @@
         <div class="card-grid">
           {#each products as product}
             <article class="flat-card">
+              {#if product.imageUrl}
+                <img class="media-thumb" src={product.imageUrl} alt={product.name} loading="lazy" />
+              {/if}
               <span class="badge">{product.category}</span>
               <h3>{product.name}</h3>
               <p>{product.shortDescription}</p>
               <p class="price-tag">{product.currency} {Number(product.price).toLocaleString()}</p>
-              <p>{product.detail}</p>
+              <div class="richtext">{@html product.detail}</div>
             </article>
           {/each}
         </div>
@@ -115,10 +134,13 @@
           {#if latestPosts.length}
             {#each latestPosts as post}
               <article class="flat-card">
+                {#if post.coverUrl}
+                  <img class="media-thumb" src={post.coverUrl} alt={post.title} loading="lazy" />
+                {/if}
                 <span class="badge">{post.categoryName || 'Uncategorized'}</span>
                 <h3>{post.title}</h3>
                 <p class="blog-meta">{new Date(post.createdAt).toLocaleDateString('id-ID')}</p>
-                <p>{post.excerpt}</p>
+                <p>{post.excerpt || summarize(post.content)}</p>
                 <a class="button-outline" href={`/blog/${post.slug}`}>Baca Detail</a>
               </article>
             {/each}
@@ -136,9 +158,13 @@
         <div class="card-grid">
           {#each products as product}
             <article class="flat-card">
+              {#if product.imageUrl}
+                <img class="media-thumb" src={product.imageUrl} alt={product.name} loading="lazy" />
+              {/if}
               <h3>{product.name}</h3>
               <p class="price-tag">{product.currency} {Number(product.price).toLocaleString()}</p>
               <p>{product.shortDescription}</p>
+              <div class="richtext">{@html product.detail}</div>
               <a class="button-main" href="/pricing">Lihat Paket</a>
             </article>
           {/each}

@@ -10,6 +10,8 @@ import {
   getNowIso,
   getPaletteByKey,
   paletteLibrary,
+  sanitizePublicUrl,
+  sanitizeRichContent,
   slugify
 } from './db.js';
 
@@ -575,10 +577,11 @@ app.post('/api/products', async (request, reply) => {
       name: String(body.name).trim(),
       slug: uniqueSlug(body.slug || body.name, db.products),
       shortDescription: String(body.shortDescription || '').trim(),
-      detail: String(body.detail || '').trim(),
+      detail: sanitizeRichContent(body.detail || ''),
       price: toNumber(body.price),
       currency: String(body.currency || 'USD').trim() || 'USD',
       category: String(body.category || 'General').trim() || 'General',
+      imageUrl: sanitizePublicUrl(body.imageUrl || ''),
       isFeatured: toBoolean(body.isFeatured),
       createdAt: now,
       updatedAt: now
@@ -617,7 +620,8 @@ app.put('/api/products/:id', async (request, reply) => {
         body.shortDescription !== undefined
           ? String(body.shortDescription || '').trim()
           : current.shortDescription,
-      detail: body.detail !== undefined ? String(body.detail || '').trim() : current.detail,
+      detail:
+        body.detail !== undefined ? sanitizeRichContent(body.detail || '') : current.detail,
       price: body.price !== undefined ? toNumber(body.price, current.price) : current.price,
       currency:
         body.currency !== undefined
@@ -627,6 +631,10 @@ app.put('/api/products/:id', async (request, reply) => {
         body.category !== undefined
           ? String(body.category || current.category).trim() || current.category
           : current.category,
+      imageUrl:
+        body.imageUrl !== undefined
+          ? sanitizePublicUrl(body.imageUrl || '')
+          : current.imageUrl || '',
       isFeatured:
         body.isFeatured !== undefined ? toBoolean(body.isFeatured) : current.isFeatured,
       updatedAt: getNowIso()
@@ -788,9 +796,9 @@ app.post('/api/blog/posts', async (request, reply) => {
       title: String(body.title).trim(),
       slug: uniqueSlug(body.slug || body.title, db.blogPosts),
       excerpt: String(body.excerpt || '').trim(),
-      content: String(body.content || '').trim(),
+      content: sanitizeRichContent(body.content || ''),
       categoryId: hasCategory ? requestedCategoryId : null,
-      coverUrl: String(body.coverUrl || '').trim(),
+      coverUrl: sanitizePublicUrl(body.coverUrl || ''),
       isPublished: body.isPublished === undefined ? true : toBoolean(body.isPublished),
       createdAt: getNowIso(),
       updatedAt: getNowIso()
@@ -836,9 +844,13 @@ app.put('/api/blog/posts/:id', async (request, reply) => {
           ? uniqueSlug(body.slug || nextTitle, db.blogPosts, id)
           : current.slug,
       excerpt: body.excerpt !== undefined ? String(body.excerpt || '').trim() : current.excerpt,
-      content: body.content !== undefined ? String(body.content || '').trim() : current.content,
+      content:
+        body.content !== undefined ? sanitizeRichContent(body.content || '') : current.content,
       categoryId: nextCategoryId,
-      coverUrl: body.coverUrl !== undefined ? String(body.coverUrl || '').trim() : current.coverUrl,
+      coverUrl:
+        body.coverUrl !== undefined
+          ? sanitizePublicUrl(body.coverUrl || '')
+          : current.coverUrl,
       isPublished:
         body.isPublished !== undefined ? toBoolean(body.isPublished) : current.isPublished,
       updatedAt: getNowIso()

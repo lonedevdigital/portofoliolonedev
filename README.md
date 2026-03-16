@@ -4,7 +4,8 @@ Aplikasi fullstack untuk portfolio web services dengan fitur:
 
 - Halaman public modern flat design
 - Product catalog + pricing
-- Blog + category
+- Product dengan gambar + rich text detail
+- Blog + category + cover image + rich text content
 - Client testimonials
 - Admin dashboard:
   - Dashboard statistik pengunjung

@@ -65,11 +65,14 @@
           {#if products.length}
             {#each products as product}
               <article class="flat-card">
+                {#if product.imageUrl}
+                  <img class="media-thumb" src={product.imageUrl} alt={product.name} loading="lazy" />
+                {/if}
                 <span class="badge">{product.category}</span>
                 <h3>{product.name}</h3>
                 <p class="price-tag">{product.currency} {Number(product.price).toLocaleString()}</p>
                 <p>{product.shortDescription}</p>
-                <p>{product.detail}</p>
+                <div class="richtext">{@html product.detail}</div>
                 <a class="button-main" href={`mailto:${footer.contactEmail}`}>Ambil Paket</a>
               </article>
             {/each}

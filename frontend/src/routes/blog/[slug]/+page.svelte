@@ -67,10 +67,13 @@
           <span class="badge">{post.categoryName || 'Uncategorized'}</span>
           <h1 class="section-title" style="margin-top:0.6rem;">{post.title}</h1>
           <p class="blog-meta">{new Date(post.createdAt).toLocaleDateString('id-ID')}</p>
+          {#if post.coverUrl}
+            <img class="cover-image" src={post.coverUrl} alt={post.title} loading="lazy" />
+          {/if}
           {#if post.excerpt}
             <p><strong>{post.excerpt}</strong></p>
           {/if}
-          <p style="white-space: pre-wrap;">{post.content}</p>
+          <div class="richtext">{@html post.content}</div>
         </div>
       </div>
     </article>

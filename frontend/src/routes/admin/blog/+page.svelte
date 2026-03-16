@@ -1,6 +1,7 @@
-﻿<script>
+<script>
   import { onMount } from 'svelte';
   import { deleteJson, getJson, postJson, putJson } from '$lib/api';
+  import RichTextEditor from '$lib/components/RichTextEditor.svelte';
 
   let loading = true;
   let savingPost = false;
@@ -32,6 +33,11 @@
       coverUrl: '',
       isPublished: true
     };
+  }
+
+  function hasRichContent(html) {
+    const textOnly = String(html || '').replace(/<[^>]*>/g, '').trim();
+    return Boolean(textOnly) || /<img\b/i.test(String(html || ''));
   }
 
   async function loadData() {
@@ -103,7 +109,7 @@
         throw new Error('Judul post wajib diisi');
       }
 
-      if (!postForm.content.trim()) {
+      if (!hasRichContent(postForm.content)) {
         throw new Error('Isi post wajib diisi');
       }
 
@@ -154,7 +160,7 @@
   <div>
     <p class="toolbar-kicker">Content Manager</p>
     <h1>Blog</h1>
-    <p class="toolbar-sub">Tambah kategori, tulis post, publish/unpublish artikel.</p>
+    <p class="toolbar-sub">Tambah kategori, tulis post rich text, upload gambar, publish/unpublish artikel.</p>
   </div>
   <button class="button-outline" on:click={loadData}>Reload</button>
 </div>
@@ -218,14 +224,6 @@
         {/each}
       </select>
     </label>
-    <label style="grid-column: 1 / -1;">
-      Excerpt
-      <textarea bind:value={postForm.excerpt}></textarea>
-    </label>
-    <label style="grid-column: 1 / -1;">
-      Content
-      <textarea bind:value={postForm.content}></textarea>
-    </label>
     <label>
       Cover URL
       <input bind:value={postForm.coverUrl} placeholder="https://..." />
@@ -234,7 +232,21 @@
       <span>Published</span>
       <input type="checkbox" bind:checked={postForm.isPublished} />
     </label>
+    <label style="grid-column: 1 / -1;">
+      Excerpt
+      <textarea bind:value={postForm.excerpt}></textarea>
+    </label>
+    <label style="grid-column: 1 / -1;">
+      Content (Rich Text)
+      <RichTextEditor bind:value={postForm.content} placeholder="Tulis konten artikel seperti editor WordPress..." minHeight={280} />
+    </label>
   </div>
+
+  {#if postForm.coverUrl}
+    <div style="margin-top:0.8rem;">
+      <img class="cover-image" src={postForm.coverUrl} alt="Preview Cover" loading="lazy" />
+    </div>
+  {/if}
 
   <div class="button-row" style="margin-top:0.8rem;">
     <button class="button-main" on:click={submitPost} disabled={savingPost}>
@@ -259,6 +271,7 @@
         <thead>
           <tr>
             <th>Judul</th>
+            <th>Cover</th>
             <th>Category</th>
             <th>Status</th>
             <th>Tanggal</th>
@@ -269,6 +282,13 @@
           {#each posts as post}
             <tr>
               <td>{post.title}</td>
+              <td>
+                {#if post.coverUrl}
+                  <img class="table-thumb" src={post.coverUrl} alt={post.title} loading="lazy" />
+                {:else}
+                  -
+                {/if}
+              </td>
               <td>{post.categoryName || 'Uncategorized'}</td>
               <td>{post.isPublished ? 'Published' : 'Draft'}</td>
               <td>{new Date(post.createdAt).toLocaleDateString('id-ID')}</td>

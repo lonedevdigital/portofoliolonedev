@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import sanitizeHtml from 'sanitize-html';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
@@ -30,6 +31,80 @@ const styleContrastPairs = [
   ['clientsBg', 'clientsText'],
   ['footerBg', 'footerText']
 ];
+
+const richTextSanitizeOptions = {
+  allowedTags: [
+    'p',
+    'br',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'ul',
+    'ol',
+    'li',
+    'strong',
+    'em',
+    'u',
+    's',
+    'blockquote',
+    'code',
+    'pre',
+    'a',
+    'img',
+    'hr'
+  ],
+  allowedAttributes: {
+    a: ['href', 'target', 'rel'],
+    img: ['src', 'alt', 'title']
+  },
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemesByTag: {
+    img: ['http', 'https']
+  }
+};
+
+function plainTextToHtml(input) {
+  const raw = String(input || '').trim();
+  if (!raw) {
+    return '';
+  }
+
+  const blocks = raw
+    .split(/\n{2,}/)
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+    .map((segment) => {
+      const escaped = sanitizeHtml(segment, {
+        allowedTags: [],
+        allowedAttributes: {}
+      }).replace(/\n/g, '<br />');
+
+      return `<p>${escaped}</p>`;
+    });
+
+  return blocks.join('');
+}
+
+export function sanitizePublicUrl(input) {
+  const value = String(input || '').trim();
+  if (!value) {
+    return '';
+  }
+
+  return /^(https?:\/\/|\/)/i.test(value) ? value : '';
+}
+
+export function sanitizeRichContent(input) {
+  const raw = String(input || '').trim();
+  if (!raw) {
+    return '';
+  }
+
+  const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(raw);
+  const candidate = looksLikeHtml ? raw : plainTextToHtml(raw);
+  return sanitizeHtml(candidate, richTextSanitizeOptions).trim();
+}
 
 function parseHexColor(colorValue) {
   if (typeof colorValue !== 'string') {
@@ -232,10 +307,11 @@ function createSeedData() {
       slug: 'landing-page-pro',
       name: 'Landing Page Pro',
       shortDescription: 'Satu halaman modern untuk branding dan lead generation.',
-      detail: 'Termasuk copywriting struktur section, form lead, analytics script, dan optimasi performa.',
+      detail: '<p>Termasuk copywriting struktur section, form lead, analytics script, dan optimasi performa.</p>',
       price: 350,
       currency: 'USD',
       category: 'Website',
+      imageUrl: '',
       isFeatured: true,
       createdAt,
       updatedAt: createdAt
@@ -245,10 +321,11 @@ function createSeedData() {
       slug: 'website-company-profile',
       name: 'Website Company Profile',
       shortDescription: 'Website multi halaman untuk profil bisnis dan portofolio.',
-      detail: 'Termasuk halaman home, layanan, proyek, kontak, dan dashboard update konten dasar.',
+      detail: '<p>Termasuk halaman home, layanan, proyek, kontak, dan dashboard update konten dasar.</p>',
       price: 900,
       currency: 'USD',
       category: 'Website',
+      imageUrl: '',
       isFeatured: true,
       createdAt,
       updatedAt: createdAt
@@ -258,10 +335,11 @@ function createSeedData() {
       slug: 'workflow-automation',
       name: 'Workflow Automation',
       shortDescription: 'Automasi proses internal untuk menghemat waktu tim.',
-      detail: 'Integrasi form, email, notifikasi, dan sinkron data antar tools.',
+      detail: '<p>Integrasi form, email, notifikasi, dan sinkron data antar tools.</p>',
       price: 500,
       currency: 'USD',
       category: 'Automation',
+      imageUrl: '',
       isFeatured: false,
       createdAt,
       updatedAt: createdAt
@@ -375,6 +453,50 @@ function createSeedData() {
 
 function normalizeDbShape(db) {
   const seed = createSeedData();
+  const rawProducts = Array.isArray(db.products) ? db.products : seed.products;
+  const rawCategories = Array.isArray(db.blogCategories)
+    ? db.blogCategories
+    : seed.blogCategories;
+  const rawPosts = Array.isArray(db.blogPosts) ? db.blogPosts : seed.blogPosts;
+  const rawClients = Array.isArray(db.clients) ? db.clients : seed.clients;
+  const rawVisits = Array.isArray(db.visits) ? db.visits : seed.visits;
+
+  const products = rawProducts.map((item) => ({
+    ...item,
+    name: String(item.name || '').trim(),
+    slug: String(item.slug || '').trim(),
+    shortDescription: String(item.shortDescription || '').trim(),
+    detail: sanitizeRichContent(item.detail || ''),
+    category: String(item.category || 'General').trim() || 'General',
+    currency: String(item.currency || 'USD').trim() || 'USD',
+    imageUrl: sanitizePublicUrl(item.imageUrl || ''),
+    isFeatured: Boolean(item.isFeatured)
+  }));
+
+  const blogCategories = rawCategories.map((item) => ({
+    ...item,
+    name: String(item.name || '').trim(),
+    slug: String(item.slug || '').trim()
+  }));
+
+  const blogPosts = rawPosts.map((item) => ({
+    ...item,
+    title: String(item.title || '').trim(),
+    slug: String(item.slug || '').trim(),
+    excerpt: String(item.excerpt || '').trim(),
+    content: sanitizeRichContent(item.content || ''),
+    coverUrl: sanitizePublicUrl(item.coverUrl || ''),
+    isPublished: Boolean(item.isPublished)
+  }));
+
+  const clients = rawClients.map((item) => ({
+    ...item,
+    name: String(item.name || '').trim(),
+    logoUrl: sanitizePublicUrl(item.logoUrl || ''),
+    website: sanitizePublicUrl(item.website || ''),
+    testimonial: String(item.testimonial || '').trim()
+  }));
+
   const rawHero = db.site?.hero ?? {};
   const seedHero = seed.site.hero;
 
@@ -416,10 +538,10 @@ function normalizeDbShape(db) {
   };
 
   return {
-    products: Array.isArray(db.products) ? db.products : seed.products,
-    blogCategories: Array.isArray(db.blogCategories) ? db.blogCategories : seed.blogCategories,
-    blogPosts: Array.isArray(db.blogPosts) ? db.blogPosts : seed.blogPosts,
-    clients: Array.isArray(db.clients) ? db.clients : seed.clients,
+    products,
+    blogCategories,
+    blogPosts,
+    clients,
     auth: {
       admin:
         db.auth?.admin &&
@@ -441,14 +563,14 @@ function normalizeDbShape(db) {
         })
       }
     },
-    visits: Array.isArray(db.visits) ? db.visits : seed.visits,
+    visits: rawVisits,
     meta: {
       nextIds: {
-        products: db.meta?.nextIds?.products ?? nextId(db.products ?? []),
-        blogCategories: db.meta?.nextIds?.blogCategories ?? nextId(db.blogCategories ?? []),
-        blogPosts: db.meta?.nextIds?.blogPosts ?? nextId(db.blogPosts ?? []),
-        clients: db.meta?.nextIds?.clients ?? nextId(db.clients ?? []),
-        visits: db.meta?.nextIds?.visits ?? nextId(db.visits ?? [])
+        products: db.meta?.nextIds?.products ?? nextId(products),
+        blogCategories: db.meta?.nextIds?.blogCategories ?? nextId(blogCategories),
+        blogPosts: db.meta?.nextIds?.blogPosts ?? nextId(blogPosts),
+        clients: db.meta?.nextIds?.clients ?? nextId(clients),
+        visits: db.meta?.nextIds?.visits ?? nextId(rawVisits)
       }
     }
   };

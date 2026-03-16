@@ -21,6 +21,22 @@
   let posts = [];
   let selectedCategory = 'all';
 
+  function stripHtml(input) {
+    return String(input || '')
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function summarize(input, max = 160) {
+    const text = stripHtml(input);
+    if (text.length <= max) {
+      return text;
+    }
+
+    return `${text.slice(0, max)}...`;
+  }
+
   $: filteredPosts =
     selectedCategory === 'all'
       ? posts
@@ -90,10 +106,13 @@
           {#if filteredPosts.length}
             {#each filteredPosts as post}
               <article class="flat-card">
+                {#if post.coverUrl}
+                  <img class="media-thumb" src={post.coverUrl} alt={post.title} loading="lazy" />
+                {/if}
                 <span class="badge">{post.categoryName || 'Uncategorized'}</span>
                 <h3>{post.title}</h3>
                 <p class="blog-meta">{new Date(post.createdAt).toLocaleDateString('id-ID')}</p>
-                <p>{post.excerpt || post.content.slice(0, 120) + '...'}</p>
+                <p>{post.excerpt || summarize(post.content)}</p>
                 <a class="button-main" href={`/blog/${post.slug}`}>Baca Selengkapnya</a>
               </article>
             {/each}
