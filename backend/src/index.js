@@ -16,6 +16,8 @@ const PORT = Number(process.env.PORT || 3001);
 const HOST = process.env.HOST || '0.0.0.0';
 const DATA_FILE = process.env.DATA_FILE || resolve(process.cwd(), 'data/db.json');
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+const CORS_CREDENTIALS =
+  String(process.env.CORS_CREDENTIALS ?? 'true').toLowerCase() === 'true';
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'lonedev_admin_session';
 const SESSION_TTL_DAYS = Number(process.env.SESSION_TTL_DAYS || 7);
 const COOKIE_SECURE = String(process.env.COOKIE_SECURE || 'false').toLowerCase() === 'true';
@@ -28,7 +30,11 @@ const corsOrigin =
     ? true
     : CORS_ORIGIN.split(',').map((item) => item.trim());
 
-await app.register(cors, { origin: corsOrigin });
+await app.register(cors, {
+  origin: corsOrigin,
+  credentials: CORS_CREDENTIALS,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+});
 await app.register(cookie);
 
 function issueId(db, scope) {

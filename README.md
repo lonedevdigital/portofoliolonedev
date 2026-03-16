@@ -60,6 +60,13 @@ Jika backend lokal Anda bukan `localhost:3001`, set env berikut saat menjalankan
 BACKEND_INTERNAL_URL=http://localhost:3001
 ```
 
+Tips CORS production:
+
+- Simpan `PUBLIC_API_BASE_URL` kosong agar browser tetap call same-origin `/api/*`.
+- Jika Anda pakai direct API domain (misalnya `https://api.domain.com`), backend harus set:
+  - `CORS_ORIGIN=https://frontend-domain.com`
+  - `CORS_CREDENTIALS=true`
+
 ## Menjalankan dengan Docker Compose
 
 ```bash
@@ -72,6 +79,7 @@ Catatan untuk Coolify:
 - Port internal container dibuat **fixed** (`3001` backend, `4173` frontend) untuk kompatibilitas parser env Coolify.
 - Routing/public port tetap dikelola dinamis oleh Coolify.
 - Frontend memanggil backend via proxy internal `http://backend:3001`.
+- Backend CORS credentials sudah aktif (`CORS_CREDENTIALS=true`) untuk kebutuhan login cookie lintas origin.
 - Coolify bisa mengelola routing/public port tanpa bentrok dengan project lain.
 
 ## Endpoint Utama Backend

@@ -1,20 +1,47 @@
 import { env } from '$env/dynamic/public';
 
+function isAbsoluteHttpUrl(value) {
+  return value.startsWith('http://') || value.startsWith('https://');
+}
+
 export function getApiBaseUrl() {
-  return (env.PUBLIC_API_BASE_URL || '').trim();
+  const configured = (env.PUBLIC_API_BASE_URL || '').trim();
+  if (!configured) {
+    return '';
+  }
+
+  // Prefer same-origin proxy in browser when configured API domain is different.
+  if (typeof window !== 'undefined' && isAbsoluteHttpUrl(configured)) {
+    try {
+      const target = new URL(configured);
+      if (target.origin !== window.location.origin) {
+        return '';
+      }
+    } catch {
+      return '';
+    }
+  }
+
+  return configured;
 }
 
 export async function apiFetch(path, options = {}) {
   const base = getApiBaseUrl();
   const normalizedPath = String(path || '').startsWith('/') ? path : `/${path}`;
 
+  const headers = new Headers(options.headers || {});
+  const hasBody = options.body !== undefined && options.body !== null;
+  const isFormDataBody =
+    typeof FormData !== 'undefined' && options.body instanceof FormData;
+
+  if (hasBody && !isFormDataBody && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
   const response = await fetch(`${base}${normalizedPath}`, {
-    credentials: 'include',
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    }
+    credentials: options.credentials || 'include',
+    headers
   });
 
   let data = null;
